@@ -99,6 +99,13 @@ public:
 	int m_iObserverLastMode; // last used observer mode
 	bool IsObserver() { return 0 != pev->iuser1; }
 
+	int m_fNVG;
+	int m_fNVGActivated;
+	float m_flNVGBattery;
+	float m_flNVGUpdate;
+	float m_flInfraredUpdate;
+	int m_unk0x2ac;
+
 	int random_seed; // See that is shared between client & server for shared weapons code
 
 	int m_iPlayerSound;		// the index of the sound list slot reserved for this player
@@ -206,6 +213,9 @@ public:
 	char m_szTeamName[TEAM_NAME_LENGTH];
 
 	void Spawn() override;
+	void ActivateNVG(int a2);
+	void FUN_100657b0(int a2);
+	void NVGThink();
 	void Pain();
 
 	//	void Think() override;
@@ -257,14 +267,15 @@ public:
 	int ObjectCaps() override { return CBaseMonster::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	void Precache() override;
 	bool IsOnLadder();
-	bool FlashlightIsOn();
-	void FlashlightTurnOn();
-	void FlashlightTurnOff();
 
 	void UpdatePlayerSound();
 	void DeathSound() override;
 
 	int Classify() override;
+
+	void HandleMP3Play(const char* a2, int a3) override;
+	void ToggleHud() override;
+
 	void SetAnimation(PLAYER_ANIM playerAnim);
 	void SetWeaponAnimType(const char* szExtention);
 	char m_szAnimExtention[32];

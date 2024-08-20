@@ -190,6 +190,8 @@ class CItemSuit : public CItem
 		else
 			EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_AAx"); // long version of suit logon
 
+		pPlayer->GiveNamedItem("item_nvg");
+		pPlayer->pev->armorvalue = 50.0f;
 		pPlayer->SetHasSuit(true);
 		return true;
 	}
@@ -337,3 +339,46 @@ class CItemLongJump : public CItem
 };
 
 LINK_ENTITY_TO_CLASS(item_longjump, CItemLongJump);
+
+class CItemNVG : public CItem
+{
+	void Spawn() override
+	{
+		Precache();
+		SET_MODEL(ENT(pev), "models/w_longjump.mdl");
+		CItem::Spawn();
+	}
+	void Precache() override
+	{
+		PRECACHE_MODEL("models/w_longjump.mdl");
+		PRECACHE_SOUND("buttons/blip1.wav");
+	}
+	bool MyTouch(CBasePlayer* pPlayer) override
+	{
+		if (pPlayer->m_fNVG != 0)
+		{
+			return false;
+		}
+
+		if (pPlayer->HasSuit())
+		{
+			pPlayer->m_fNVG = 1;
+
+			MESSAGE_BEGIN(MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev);
+			WRITE_STRING(STRING(pev->classname));
+			MESSAGE_END();
+
+			MESSAGE_BEGIN(MSG_ONE, gmsgNVG, NULL, pPlayer->pev);
+			WRITE_BYTE(1);
+			WRITE_BYTE(pPlayer->m_flNVGBattery);
+			MESSAGE_END();
+
+			EMIT_SOUND(pPlayer->edict(), CHAN_WEAPON, "buttons/blip1.wav", 0.8f, ATTN_NORM);
+
+			return true;
+		}
+		return false;
+	}
+};
+
+LINK_ENTITY_TO_CLASS(item_nvg, CItemNVG);

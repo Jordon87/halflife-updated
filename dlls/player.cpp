@@ -1599,7 +1599,6 @@ int CBasePlayer::Classify()
 	return CLASS_PLAYER;
 }
 
-
 void CBasePlayer::AddPoints(int score, bool bAllowNegativeScore)
 {
 	// Positive score always adds
@@ -1832,6 +1831,12 @@ void CBasePlayer::PreThink()
 		PlayerDeathThink();
 		return;
 	}
+
+	if (m_fNVG != 0)
+	{
+		NVGThink();
+	}
+
 
 	// So the correct flags get sent to client asap.
 	//
@@ -2879,11 +2884,147 @@ void CBasePlayer::Spawn()
 
 	m_lastx = m_lasty = 0;
 
+	m_fNVGActivated = 0;
+	m_fNVG = 0;
+	m_flNVGBattery = 100.0f;
+	m_flNVGUpdate = gpGlobals->time;
+	m_unk0x2ac = 0;
+
 	m_flNextChatTime = gpGlobals->time;
 
 	g_pGameRules->PlayerSpawn(this);
 }
 
+void CBasePlayer::ActivateNVG(int a2)
+{
+	if (m_fNVG != 0)
+	{
+		if (a2 == 0)
+		{
+			if (m_fNVGActivated != 0)
+			{
+				m_fNVGActivated = 0;
+
+				MESSAGE_BEGIN(MSG_ONE, gmsgNVGActivate, NULL, edict());
+				WRITE_BYTE(0);
+				WRITE_BYTE(m_flNVGBattery);
+				MESSAGE_END();
+				FUN_100657b0(0);
+				EMIT_SOUND(ENT(pev), CHAN_VOICE, "items/nvg_turnoff.wav", 1.0f, ATTN_NORM);
+			}
+		}
+		else if (m_fNVGActivated == 0)
+		{
+			m_fNVGActivated = 1;
+
+			MESSAGE_BEGIN(MSG_ONE, gmsgNVGActivate, NULL, edict());
+			WRITE_BYTE(1);
+			WRITE_BYTE(m_flNVGBattery);
+			MESSAGE_END();
+			EMIT_SOUND(ENT(pev), CHAN_VOICE, "items/nvg_turnon.wav", 1.0f, ATTN_NORM);
+		}
+	}
+}
+
+void CBasePlayer::FUN_100657b0(int a2)
+{
+	int v3;
+	int v4;
+
+	if (a2 == 0)
+	{
+		v3 = 0;
+		v4 = 0;
+		ClearBits(pev->effects, EF_BRIGHTLIGHT);
+		m_flInfraredUpdate = gpGlobals->time;
+	}
+	else
+	{
+		v3 = 150;
+		v4 = 255;
+		SetBits(pev->effects, EF_BRIGHTLIGHT);
+		m_flInfraredUpdate = gpGlobals->time + 24.5f;
+	}
+
+	MESSAGE_BEGIN(MSG_ONE, SVC_TEMPENTITY, pev->origin, edict());
+	WRITE_BYTE(TE_ELIGHT);
+	WRITE_SHORT(entindex());
+	WRITE_COORD(pev->origin.x);
+	WRITE_COORD(pev->origin.y);
+	WRITE_COORD(pev->origin.z);
+	WRITE_COORD(2048.0f);
+	WRITE_BYTE(v3);
+	WRITE_BYTE(0);
+	WRITE_BYTE(0);
+	WRITE_BYTE(v4);
+	WRITE_COORD(0.0f);
+	MESSAGE_END();
+}
+
+void CBasePlayer::NVGThink()
+{
+	m_flNVGUpdate = gpGlobals->time;
+
+	if (this->m_fNVGActivated == 0)
+	{
+		if (m_flNVGBattery < 100.0f)
+		{
+			if (gpGlobals->time - m_flNVGUpdate * 7.5f + m_flNVGBattery > 100.0f)
+			{
+				MESSAGE_BEGIN(MSG_ONE, gmsgNVGActivate, NULL, pev);
+				WRITE_BYTE(0);
+				WRITE_BYTE(m_flNVGBattery);
+				MESSAGE_END();
+			}
+		}
+	}
+	else
+	{
+		if (m_flNVGBattery - gpGlobals->time - m_flNVGUpdate * 0.75f <= 0.0f)
+		{
+			m_flNVGBattery = 0.0f;
+			ActivateNVG(0);
+			m_fNVGActivated = 0;
+		}
+	}
+	if (m_fNVGActivated != 0)
+	{
+		if (m_flInfraredUpdate < gpGlobals->time)
+		{
+			FUN_100657b0(1);
+		}
+	}
+}
+
+void CBasePlayer::HandleMP3Play(const char* a2, int a3)
+{
+	if (a3 != 0)
+	{
+		MESSAGE_BEGIN(MSG_ONE, gmsgPlayMP3, NULL, edict());
+		WRITE_STRING(a2);
+		WRITE_BYTE(1);
+		MESSAGE_END();
+	}
+	
+	MESSAGE_BEGIN(MSG_ONE, gmsgPlayMP3, NULL, edict());
+	WRITE_STRING(a2);
+	WRITE_BYTE(0);
+	MESSAGE_END();
+}
+
+void CBasePlayer::ToggleHud()
+{
+	if (m_unk0x2ac == 0)
+	{
+		m_unk0x2ac = 1;
+		SetBits(m_iHideHUD, HIDEHUD_ALL);
+	}
+	else
+	{
+		m_unk0x2ac = 0;
+		ClearBits(m_iHideHUD, HIDEHUD_ALL);
+	}
+}
 
 void CBasePlayer::Precache()
 {
@@ -3289,45 +3430,6 @@ void CBasePlayer::GiveNamedItem(const char* szName, int defaultAmmo)
 	DispatchTouch(pent, ENT(pev));
 }
 
-bool CBasePlayer::FlashlightIsOn()
-{
-	return FBitSet(pev->effects, EF_DIMLIGHT);
-}
-
-
-void CBasePlayer::FlashlightTurnOn()
-{
-	if (!g_pGameRules->FAllowFlashlight())
-	{
-		return;
-	}
-
-	if (HasSuit())
-	{
-		EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_ON, 1.0, ATTN_NORM, 0, PITCH_NORM);
-		SetBits(pev->effects, EF_DIMLIGHT);
-		MESSAGE_BEGIN(MSG_ONE, gmsgFlashlight, NULL, pev);
-		WRITE_BYTE(1);
-		WRITE_BYTE(m_iFlashBattery);
-		MESSAGE_END();
-
-		m_flFlashLightTime = FLASH_DRAIN_TIME + gpGlobals->time;
-	}
-}
-
-
-void CBasePlayer::FlashlightTurnOff()
-{
-	EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_OFF, 1.0, ATTN_NORM, 0, PITCH_NORM);
-	ClearBits(pev->effects, EF_DIMLIGHT);
-	MESSAGE_BEGIN(MSG_ONE, gmsgFlashlight, NULL, pev);
-	WRITE_BYTE(0);
-	WRITE_BYTE(m_iFlashBattery);
-	MESSAGE_END();
-
-	m_flFlashLightTime = FLASH_CHARGE_TIME + gpGlobals->time;
-}
-
 /*
 ===============
 ForceClientDllUpdate
@@ -3402,15 +3504,8 @@ void CBasePlayer::ImpulseCommands()
 		break;
 	}
 	case 100:
-		// temporary flashlight for level designers
-		if (FlashlightIsOn())
-		{
-			FlashlightTurnOff();
-		}
-		else
-		{
-			FlashlightTurnOn();
-		}
+		ToggleHud();
+		pev->impulse = 0;
 		break;
 
 	case 201: // paint decal
@@ -4070,54 +4165,6 @@ void CBasePlayer::UpdateClientData()
 		// Clear off non-time-based damage indicators
 		m_bitsDamageType &= DMG_TIMEBASED;
 	}
-
-	if (m_bRestored)
-	{
-		//Always tell client about battery state
-		MESSAGE_BEGIN(MSG_ONE, gmsgFlashBattery, NULL, pev);
-		WRITE_BYTE(m_iFlashBattery);
-		MESSAGE_END();
-
-		//Tell client the flashlight is on
-		if (FlashlightIsOn())
-		{
-			MESSAGE_BEGIN(MSG_ONE, gmsgFlashlight, NULL, pev);
-			WRITE_BYTE(1);
-			WRITE_BYTE(m_iFlashBattery);
-			MESSAGE_END();
-		}
-	}
-
-	// Update Flashlight
-	if ((0 != m_flFlashLightTime) && (m_flFlashLightTime <= gpGlobals->time))
-	{
-		if (FlashlightIsOn())
-		{
-			if (0 != m_iFlashBattery)
-			{
-				m_flFlashLightTime = FLASH_DRAIN_TIME + gpGlobals->time;
-				m_iFlashBattery--;
-
-				if (0 == m_iFlashBattery)
-					FlashlightTurnOff();
-			}
-		}
-		else
-		{
-			if (m_iFlashBattery < 100)
-			{
-				m_flFlashLightTime = FLASH_CHARGE_TIME + gpGlobals->time;
-				m_iFlashBattery++;
-			}
-			else
-				m_flFlashLightTime = 0;
-		}
-
-		MESSAGE_BEGIN(MSG_ONE, gmsgFlashBattery, NULL, pev);
-		WRITE_BYTE(m_iFlashBattery);
-		MESSAGE_END();
-	}
-
 
 	if ((m_iTrain & TRAIN_NEW) != 0)
 	{

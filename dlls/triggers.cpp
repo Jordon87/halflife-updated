@@ -2437,3 +2437,51 @@ void CTriggerCamera::Move()
 	float fraction = 2 * gpGlobals->frametime;
 	pev->velocity = ((pev->movedir * pev->speed) * fraction) + (pev->velocity * (1 - fraction));
 }
+
+#define SF_MP3_UNK_FLAG 0x0001
+
+//
+// trigger_mp3audio
+//
+class CTriggerMP3Audio : public CBaseTrigger
+{
+public:
+	bool KeyValue(KeyValueData* pkvd) override;
+	void Spawn() override;
+	void EXPORT Play(CBaseEntity* pActivator);
+
+	char m_szTrackName[32];
+};
+
+LINK_ENTITY_TO_CLASS(trigger_mp3audio, CTriggerMP3Audio);
+
+bool CTriggerMP3Audio::KeyValue(KeyValueData* pkvd)
+{
+	if (FStrEq(pkvd->szKeyName, "track"))
+	{
+		if (strlen(pkvd->szValue) >= 32)
+			ALERT(at_error, "Track name '%s' too long (32 chars)\n", pkvd->szValue);
+		strcpy(m_szTrackName, pkvd->szValue);
+		return true;
+	}
+
+	return CBaseTrigger::KeyValue(pkvd);
+}
+
+void CTriggerMP3Audio::Spawn()
+{
+	if (FStrEq(m_szTrackName, ""))
+		ALERT(at_console, "no mp3 found");
+
+	InitTrigger();
+	SetTouch(&CTriggerMP3Audio::Play);
+}
+
+void CTriggerMP3Audio::Play(CBaseEntity* pActivator)
+{
+	if (!pActivator->IsPlayer())
+	{
+		pActivator->HandleMP3Play(m_szTrackName, (pev->spawnflags & SF_MP3_UNK_FLAG) != 0);
+		UTIL_Remove(this);
+	}
+}

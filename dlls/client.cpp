@@ -591,6 +591,16 @@ void ClientCommand(edict_t* pEntity)
 		if (player->IsObserver())
 			player->Observer_FindNextPlayer(atoi(CMD_ARGV(1)) != 0);
 	}
+	else if (FStrEq(pcmd, "nightvision"))
+	{
+		if (player->m_fNVG != 0)
+		{
+			if (player->m_fNVGActivated != 0)
+				player->ActivateNVG(0);
+			else
+				player->ActivateNVG(1);
+		}
+	}
 	else if (g_pGameRules->ClientCommand(player, pcmd))
 	{
 		// MenuSelect returns true only if the command is properly handled,  so don't print a warning
@@ -1013,6 +1023,8 @@ void ClientPrecache()
 
 	// hud sounds
 
+	PRECACHE_SOUND("items/nvg_turnon.wav");
+	PRECACHE_SOUND("items/nvg_turnoff.wav");
 	PRECACHE_SOUND("common/wpn_hudoff.wav");
 	PRECACHE_SOUND("common/wpn_hudon.wav");
 	PRECACHE_SOUND("common/wpn_moveselect.wav");

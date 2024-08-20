@@ -18,7 +18,6 @@
 inline int gmsgShake = 0;
 inline int gmsgFade = 0;
 inline int gmsgFlashlight = 0;
-inline int gmsgFlashBattery = 0;
 inline int gmsgResetHUD = 0;
 inline int gmsgInitHUD = 0;
 inline int gmsgShowGameTitle = 0;
@@ -54,5 +53,9 @@ inline int gmsgStatusText = 0;
 inline int gmsgStatusValue = 0;
 
 inline int gmsgWeapons = 0;
+
+inline int gmsgNVG = 0;
+inline int gmsgNVGActivate = 0;
+inline int gmsgPlayMP3 = 0;
 
 void LinkUserMessages();

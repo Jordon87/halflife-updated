@@ -176,6 +176,8 @@ public:
 	virtual int Classify() { return CLASS_NONE; }
 	virtual void DeathNotice(entvars_t* pevChild) {} // monster maker children use this to tell the monster maker that they have died.
 
+	virtual void HandleMP3Play(const char *a2, int a3) {}
+	virtual void ToggleHud() {}
 
 	static TYPEDESCRIPTION m_SaveData[];
 

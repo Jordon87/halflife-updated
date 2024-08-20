@@ -258,9 +258,6 @@ bool CBasePlayer::Restore(CRestore& restore) { return false; }
 void CBasePlayer::SelectNextItem(int iItem) {}
 bool CBasePlayer::HasWeapons() { return false; }
 void CBasePlayer::SelectPrevItem(int iItem) {}
-bool CBasePlayer::FlashlightIsOn() { return false; }
-void CBasePlayer::FlashlightTurnOn() {}
-void CBasePlayer::FlashlightTurnOff() {}
 void CBasePlayer::ForceClientDllUpdate() {}
 void CBasePlayer::ImpulseCommands() {}
 void CBasePlayer::CheatImpulseCommands(int iImpulse) {}
@@ -291,6 +288,8 @@ int CBasePlayer::GiveAmmo(int iCount, const char* szName, int iMax) { return 0; 
 void CBasePlayer::AddPoints(int score, bool bAllowNegativeScore) {}
 void CBasePlayer::AddPointsToTeam(int score, bool bAllowNegativeScore) {}
 void CBasePlayer::TabulateAmmo() {}
+void CBasePlayer::HandleMP3Play(const char* a2, int a3) {}
+void CBasePlayer::ToggleHud() {}
 
 void ClearMultiDamage() {}
 void ApplyMultiDamage(entvars_t* pevInflictor, entvars_t* pevAttacker) {}

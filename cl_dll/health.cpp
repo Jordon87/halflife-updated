@@ -141,28 +141,7 @@ bool CHudHealth::MsgFunc_Damage(const char* pszName, int iSize, void* pbuf)
 // Green <-> Yellow <-> Red ramp
 void CHudHealth::GetPainColor(int& r, int& g, int& b)
 {
-	int iHealth = m_iHealth;
-
-	if (iHealth > 25)
-		iHealth -= 25;
-	else if (iHealth < 0)
-		iHealth = 0;
-#if 0
-	g = iHealth * 255 / 100;
-	r = 255 - g;
-	b = 0;
-#else
-	if (m_iHealth > 25)
-	{
-		UnpackRGB(r, g, b, RGB_YELLOWISH);
-	}
-	else
-	{
-		r = 250;
-		g = 0;
-		b = 0;
-	}
-#endif
+	UnpackRGB(r, g, b, 0xff1010);
 }
 
 bool CHudHealth::Draw(float flTime)
@@ -226,7 +205,7 @@ bool CHudHealth::Draw(float flTime)
 
 		int iHeight = gHUD.m_iFontHeight;
 		int iWidth = HealthWidth / 10;
-		UnpackRGB(r, g, b, RGB_YELLOWISH);
+		UnpackRGB(r, g, b, 0xff1010);
 		FillRGBA(x, y, iWidth, iHeight, r, g, b, a);
 	}
 

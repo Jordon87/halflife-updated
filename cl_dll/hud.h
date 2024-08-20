@@ -164,7 +164,6 @@ private:
 
 #include "health.h"
 
-
 #define FADE_TIME 100
 
 
@@ -343,33 +342,6 @@ private:
 //
 //-----------------------------------------------------
 //
-class CHudFlashlight : public CHudBase
-{
-public:
-	bool Init() override;
-	bool VidInit() override;
-	bool Draw(float flTime) override;
-	void Reset() override;
-	bool MsgFunc_Flashlight(const char* pszName, int iSize, void* pbuf);
-	bool MsgFunc_FlashBat(const char* pszName, int iSize, void* pbuf);
-
-private:
-	HSPRITE m_hSprite1;
-	HSPRITE m_hSprite2;
-	HSPRITE m_hBeam;
-	Rect* m_prc1;
-	Rect* m_prc2;
-	Rect* m_prcBeam;
-	float m_flBat;
-	int m_iBat;
-	bool m_fOn;
-	float m_fFade;
-	int m_iWidth; // width of the battery innards
-};
-
-//
-//-----------------------------------------------------
-//
 const int maxHUDMessages = 16;
 struct message_parms_t
 {
@@ -480,6 +452,30 @@ private:
 //-----------------------------------------------------
 //
 
+class CHudNVG : public CHudBase
+{
+public:
+	bool Init() override;
+	bool VidInit() override;
+	bool Draw(float flTime) override;
+	bool MsgFunc_NVGActivate(const char* pszName, int iSize, void* pbuf);
+	bool MsgFunc_NVG(const char* pszName, int iSize, void* pbuf);
+
+	int m_hsprNVG;
+	int m_hsprBatteryFull;
+	int m_hsprBatteryEmpty;
+	Rect* m_iUnk0x20;
+	Rect* m_iUnk0x24;
+	int m_iUnk0x28;
+	int m_iUnk0x2c;
+	int m_iUnk0x30;
+	int m_iUnk0x34;
+	float m_flUnk0x38;
+};
+
+//
+//-----------------------------------------------------
+//
 
 class CHud
 {
@@ -562,7 +558,6 @@ public:
 	CHudGeiger m_Geiger;
 	CHudBattery m_Battery;
 	CHudTrain m_Train;
-	CHudFlashlight m_Flash;
 	CHudMessage m_Message;
 	CHudStatusBar m_StatusBar;
 	CHudDeathNotice m_DeathNotice;
@@ -571,6 +566,7 @@ public:
 	CHudAmmoSecondary m_AmmoSecondary;
 	CHudTextMessage m_TextMessage;
 	CHudStatusIcons m_StatusIcons;
+	CHudNVG m_NVG;
 
 	void Init();
 	void VidInit();
