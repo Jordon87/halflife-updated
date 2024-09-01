@@ -196,7 +196,14 @@ void CZombie::HandleAnimEvent(MonsterEvent_t* pEvent)
 	{
 		// do stuff for this event.
 		//		ALERT( at_console, "Slash right!\n" );
-		CBaseEntity* pHurt = CheckTraceHullAttack(70, gSkillData.zombieDmgOneSlash, DMG_SLASH);
+		
+		int rightSlashDamage;
+		if (pev->body + gSkillData.zombieDmgOneSlash == 0.0f)
+			rightSlashDamage = 0;
+		else
+			rightSlashDamage = 10;
+
+		CBaseEntity* pHurt = CheckTraceHullAttack(70, rightSlashDamage, DMG_SLASH);
 		if (pHurt)
 		{
 			if ((pHurt->pev->flags & (FL_MONSTER | FL_CLIENT)) != 0)
@@ -220,7 +227,14 @@ void CZombie::HandleAnimEvent(MonsterEvent_t* pEvent)
 	{
 		// do stuff for this event.
 		//		ALERT( at_console, "Slash left!\n" );
-		CBaseEntity* pHurt = CheckTraceHullAttack(70, gSkillData.zombieDmgOneSlash, DMG_SLASH);
+
+		int leftSlashDamage;
+		if (pev->body + gSkillData.zombieDmgOneSlash == 0.0f)
+			leftSlashDamage = 0;
+		else
+			leftSlashDamage = 10;
+
+		CBaseEntity* pHurt = CheckTraceHullAttack(70, leftSlashDamage, DMG_SLASH);
 		if (pHurt)
 		{
 			if ((pHurt->pev->flags & (FL_MONSTER | FL_CLIENT)) != 0)
@@ -242,7 +256,14 @@ void CZombie::HandleAnimEvent(MonsterEvent_t* pEvent)
 	case ZOMBIE_AE_ATTACK_BOTH:
 	{
 		// do stuff for this event.
-		CBaseEntity* pHurt = CheckTraceHullAttack(70, gSkillData.zombieDmgBothSlash, DMG_SLASH);
+		
+		int bothSlashDamage;
+		if (pev->body + gSkillData.zombieDmgBothSlash == 0.0f)
+			bothSlashDamage = 0;
+		else
+			bothSlashDamage = 10;
+
+		CBaseEntity* pHurt = CheckTraceHullAttack(70, bothSlashDamage, DMG_SLASH);
 		if (pHurt)
 		{
 			if ((pHurt->pev->flags & (FL_MONSTER | FL_CLIENT)) != 0)
@@ -273,7 +294,19 @@ void CZombie::Spawn()
 {
 	Precache();
 
-	SET_MODEL(ENT(pev), "models/zombie.mdl");
+	if (pev->body == 0)
+	{
+		SET_MODEL(ENT(pev), "models/zombie.mdl");
+	}
+	if (pev->body == 1)
+	{
+		SET_MODEL(ENT(pev), "models/zombie_barney.mdl");
+	}
+	if (pev->body == 3)
+	{
+		SET_MODEL(ENT(pev), "models/zombie_soldier.mdl");
+	}
+	
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
 
 	pev->solid = SOLID_SLIDEBOX;
@@ -293,7 +326,28 @@ void CZombie::Spawn()
 //=========================================================
 void CZombie::Precache()
 {
-	PRECACHE_MODEL("models/zombie.mdl");
+	if (pev->body == 2)
+	{
+		pev->body = RANDOM_LONG(0, 2);
+
+		if (pev->body == 2)
+		{
+			pev->body = 3;
+		}
+	}
+
+	if (pev->body == 0)
+	{
+		PRECACHE_MODEL("models/zombie.mdl");
+	}
+	if (pev->body == 1)
+	{
+		PRECACHE_MODEL("models/zombie_barney.mdl");
+	}
+	if (pev->body == 3)
+	{
+		PRECACHE_MODEL("models/zombie_soldier.mdl");
+	}
 
 	PRECACHE_SOUND_ARRAY(pAttackHitSounds);
 	PRECACHE_SOUND_ARRAY(pAttackMissSounds);

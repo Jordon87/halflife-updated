@@ -131,59 +131,60 @@ void CPython::SecondaryAttack()
 
 void CPython::PrimaryAttack()
 {
-	// don't fire underwater
-	if (m_pPlayer->pev->waterlevel == 3)
+	if (m_iUnk_0x88 == 0)
 	{
-		PlayEmptySound();
-		m_flNextPrimaryAttack = 0.15;
-		return;
-	}
-
-	if (m_iClip <= 0)
-	{
-		if (m_fFireOnEmpty)
+		m_iUnk_0x88 = 1;
+		
+		// don't fire underwater
+		if (m_pPlayer->pev->waterlevel == 3)
 		{
 			PlayEmptySound();
 			m_flNextPrimaryAttack = 0.15;
+			return;
 		}
-
-		return;
-	}
-
-	m_pPlayer->m_iWeaponVolume = LOUD_GUN_VOLUME;
-	m_pPlayer->m_iWeaponFlash = BRIGHT_GUN_FLASH;
-
-	m_iClip--;
-
-	m_pPlayer->pev->effects = (int)(m_pPlayer->pev->effects) | EF_MUZZLEFLASH;
-
-	// player "shoot" animation
-	m_pPlayer->SetAnimation(PLAYER_ATTACK1);
-
-
-	UTIL_MakeVectors(m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle);
-
-	Vector vecSrc = m_pPlayer->GetGunPosition();
-	Vector vecAiming = m_pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
-
-	Vector vecDir;
-	vecDir = m_pPlayer->FireBulletsPlayer(1, vecSrc, vecAiming, VECTOR_CONE_1DEGREES, 8192, BULLET_PLAYER_357, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
-
-	int flags;
+	
+		if (m_iClip <= 0)
+		{
+			if (m_fFireOnEmpty)
+			{
+				PlayEmptySound();
+				m_flNextPrimaryAttack = 0.15;
+			}
+	
+			return;
+		}
+	
+		m_pPlayer->m_iWeaponVolume = LOUD_GUN_VOLUME;
+		m_pPlayer->m_iWeaponFlash = BRIGHT_GUN_FLASH;
+	
+		m_iClip--;
+	
+		m_pPlayer->pev->effects = (int)(m_pPlayer->pev->effects) | EF_MUZZLEFLASH;
+	
+		// player "shoot" animation
+		m_pPlayer->SetAnimation(PLAYER_ATTACK1);
+	
+	
+		UTIL_MakeVectors(m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle);
+	
+		Vector vecSrc = m_pPlayer->GetGunPosition();
+		Vector vecAiming = m_pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
+	
+		Vector vecDir;
+		vecDir = m_pPlayer->FireBulletsPlayer(1, vecSrc, vecAiming, VECTOR_CONE_1DEGREES, 8192, BULLET_PLAYER_357, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
+	
+		int flags;
 #if defined(CLIENT_WEAPONS)
-	flags = FEV_NOTHOST;
+		flags = FEV_NOTHOST;
 #else
-	flags = 0;
+		flags = 0;
 #endif
 
-	PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usFirePython, 0.0, g_vecZero, g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
+		PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usFirePython, 0.0, g_vecZero, g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
 
-	if (0 == m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
-		// HEV suit - indicate out of ammo condition
-		m_pPlayer->SetSuitUpdate("!HEV_AMO0", false, 0);
-
-	m_flNextPrimaryAttack = 0.75;
-	m_flTimeWeaponIdle = UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15);
+		m_flNextPrimaryAttack = 0.75;
+		m_flTimeWeaponIdle = UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15);
+	}
 }
 
 
@@ -211,6 +212,8 @@ void CPython::Reload()
 void CPython::WeaponIdle()
 {
 	ResetEmptySound();
+
+	m_iUnk_0x88 = 0;
 
 	m_pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
 

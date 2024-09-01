@@ -20,6 +20,7 @@
 #include "soundent.h"
 #include "effects.h"
 #include "customentity.h"
+#include "triggers.h"
 
 typedef struct
 {
@@ -39,6 +40,7 @@ typedef struct
 class COsprey : public CBaseMonster
 {
 public:
+	bool KeyValue(KeyValueData* pkvd) override;
 	bool Save(CSave& save) override;
 	bool Restore(CRestore& restore) override;
 	static TYPEDESCRIPTION m_SaveData[];
@@ -83,9 +85,6 @@ public:
 	float m_flIdealtilt;
 	float m_flRotortilt;
 
-	float m_flRightHealth;
-	float m_flLeftHealth;
-
 	int m_iUnits;
 	EHANDLE m_hGrunt[MAX_CARRY];
 	Vector m_vecOrigin[MAX_CARRY];
@@ -100,9 +99,6 @@ public:
 	int m_iTailGibs;
 	int m_iBodyGibs;
 	int m_iEngineGibs;
-
-	int m_iDoLeftSmokePuff;
-	int m_iDoRightSmokePuff;
 };
 
 LINK_ENTITY_TO_CLASS(monster_osprey, COsprey);
@@ -124,9 +120,6 @@ TYPEDESCRIPTION COsprey::m_SaveData[] =
 		DEFINE_FIELD(COsprey, m_flIdealtilt, FIELD_FLOAT),
 		DEFINE_FIELD(COsprey, m_flRotortilt, FIELD_FLOAT),
 
-		DEFINE_FIELD(COsprey, m_flRightHealth, FIELD_FLOAT),
-		DEFINE_FIELD(COsprey, m_flLeftHealth, FIELD_FLOAT),
-
 		DEFINE_FIELD(COsprey, m_iUnits, FIELD_INTEGER),
 		DEFINE_ARRAY(COsprey, m_hGrunt, FIELD_EHANDLE, MAX_CARRY),
 		DEFINE_ARRAY(COsprey, m_vecOrigin, FIELD_POSITION_VECTOR, MAX_CARRY),
@@ -135,9 +128,6 @@ TYPEDESCRIPTION COsprey::m_SaveData[] =
 		// DEFINE_FIELD( COsprey, m_iSoundState, FIELD_INTEGER ),
 		// DEFINE_FIELD( COsprey, m_iSpriteTexture, FIELD_INTEGER ),
 		// DEFINE_FIELD( COsprey, m_iPitch, FIELD_INTEGER ),
-
-		DEFINE_FIELD(COsprey, m_iDoLeftSmokePuff, FIELD_INTEGER),
-		DEFINE_FIELD(COsprey, m_iDoRightSmokePuff, FIELD_INTEGER),
 };
 IMPLEMENT_SAVERESTORE(COsprey, CBaseMonster);
 
@@ -149,17 +139,22 @@ void COsprey::Spawn()
 	pev->movetype = MOVETYPE_FLY;
 	pev->solid = SOLID_BBOX;
 
-	SET_MODEL(ENT(pev), "models/osprey.mdl");
+	if (pev->body == 0)
+	{
+		SET_MODEL(ENT(pev), "models/osprey.mdl");
+	}
+	else
+	{
+		SET_MODEL(ENT(pev), "models/medosprey.mdl");
+	}
+	
 	UTIL_SetSize(pev, Vector(-400, -400, -100), Vector(400, 400, 32));
 	UTIL_SetOrigin(pev, pev->origin);
 
 	//Set FL_FLY so the Osprey model is interpolated.
 	pev->flags |= FL_MONSTER | FL_FLY;
 	pev->takedamage = DAMAGE_YES;
-	m_flRightHealth = 200;
-	m_flLeftHealth = 200;
-	pev->health = 400;
-	pev->max_health = pev->health;
+	pev->health = 6.0f;
 
 	m_flFieldOfView = 0; // 180 degrees
 
@@ -187,7 +182,15 @@ void COsprey::Precache()
 {
 	UTIL_PrecacheOther("monster_human_grunt");
 
-	PRECACHE_MODEL("models/osprey.mdl");
+	if (pev->body == 0)
+	{
+		PRECACHE_MODEL("models/osprey.mdl");
+	}
+	else
+	{
+		PRECACHE_MODEL("models/medosprey.mdl");
+	}
+	
 	PRECACHE_MODEL("models/HVR.mdl");
 
 	PRECACHE_SOUND("apache/ap_rotor4.wav");
@@ -548,6 +551,21 @@ void COsprey::CrashTouch(CBaseEntity* pOther)
 		m_startTime = gpGlobals->time;
 		pev->nextthink = gpGlobals->time;
 		m_velocity = pev->velocity;
+
+		if (pev->body == 0 && 0 == strcmp("vis24", STRING(gpGlobals->mapname)))
+		{
+			CMultiManager* pManger = NULL;
+			pManger = (CMultiManager*)UTIL_FindEntityByTargetname(NULL, "medicosprey");
+
+			CBasePlayer* pPlayer = NULL;
+			pPlayer = (CBasePlayer*)UTIL_FindEntityByClassname(NULL, "player");
+
+			pManger->ManagerUse((CBaseEntity*)pPlayer, this, USE_SET, 0.0f);
+		}
+	}
+	else
+	{
+		UTIL_Remove(pOther);
 	}
 }
 
@@ -567,17 +585,12 @@ void COsprey::DyingThink()
 
 		Vector vecSpot = pev->origin + pev->velocity * 0.2;
 
+		vecSpot.x + RANDOM_FLOAT(-150, 150);
+		vecSpot.y + RANDOM_FLOAT(-150, 150);
+		vecSpot.z + RANDOM_FLOAT(-150, 150);
+		
 		// random explosions
-		MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, vecSpot);
-		WRITE_BYTE(TE_EXPLOSION); // This just makes a dynamic light now
-		WRITE_COORD(vecSpot.x + RANDOM_FLOAT(-150, 150));
-		WRITE_COORD(vecSpot.y + RANDOM_FLOAT(-150, 150));
-		WRITE_COORD(vecSpot.z + RANDOM_FLOAT(-150, -50));
-		WRITE_SHORT(g_sModelIndexFireball);
-		WRITE_BYTE(RANDOM_LONG(0, 29) + 30); // scale * 10
-		WRITE_BYTE(12);						 // framerate
-		WRITE_BYTE(TE_EXPLFLAG_NONE);
-		MESSAGE_END();
+		UTIL_Explode(vecSpot, 12, RANDOM_LONG(0, 29) + 30);
 
 		// lots of smoke
 		MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, vecSpot);
@@ -741,40 +754,6 @@ void COsprey::DyingThink()
 }
 
 
-void COsprey::ShowDamage()
-{
-	if (m_iDoLeftSmokePuff > 0 || RANDOM_LONG(0, 99) > m_flLeftHealth)
-	{
-		Vector vecSrc = pev->origin + gpGlobals->v_right * -340;
-		MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, vecSrc);
-		WRITE_BYTE(TE_SMOKE);
-		WRITE_COORD(vecSrc.x);
-		WRITE_COORD(vecSrc.y);
-		WRITE_COORD(vecSrc.z);
-		WRITE_SHORT(g_sModelIndexSmoke);
-		WRITE_BYTE(RANDOM_LONG(0, 9) + 20); // scale * 10
-		WRITE_BYTE(12);						// framerate
-		MESSAGE_END();
-		if (m_iDoLeftSmokePuff > 0)
-			m_iDoLeftSmokePuff--;
-	}
-	if (m_iDoRightSmokePuff > 0 || RANDOM_LONG(0, 99) > m_flRightHealth)
-	{
-		Vector vecSrc = pev->origin + gpGlobals->v_right * 340;
-		MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, vecSrc);
-		WRITE_BYTE(TE_SMOKE);
-		WRITE_COORD(vecSrc.x);
-		WRITE_COORD(vecSrc.y);
-		WRITE_COORD(vecSrc.z);
-		WRITE_SHORT(g_sModelIndexSmoke);
-		WRITE_BYTE(RANDOM_LONG(0, 9) + 20); // scale * 10
-		WRITE_BYTE(12);						// framerate
-		MESSAGE_END();
-		if (m_iDoRightSmokePuff > 0)
-			m_iDoRightSmokePuff--;
-	}
-}
-
 void COsprey::Update()
 {
 	//Look around so AI triggers work.
@@ -803,33 +782,19 @@ void COsprey::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir,
 {
 	// ALERT( at_console, "%d %.0f\n", ptr->iHitgroup, flDamage );
 
-	// only so much per engine
-	if (ptr->iHitgroup == 3)
-	{
-		if (m_flRightHealth < 0)
-			return;
-		else
-			m_flRightHealth -= flDamage;
-		m_iDoRightSmokePuff = 3 + (flDamage / 5.0);
-	}
-
-	if (ptr->iHitgroup == 2)
-	{
-		if (m_flLeftHealth < 0)
-			return;
-		else
-			m_flLeftHealth -= flDamage;
-		m_iDoLeftSmokePuff = 3 + (flDamage / 5.0);
-	}
-
 	// hit hard, hits cockpit, hits engines
-	if (flDamage > 50 || ptr->iHitgroup == 1 || ptr->iHitgroup == 2 || ptr->iHitgroup == 3)
+	if ((bitsDamageType & DMG_BLAST) != 0)
 	{
 		// ALERT( at_console, "%.0f\n", flDamage );
 		AddMultiDamage(pevAttacker, this, flDamage, bitsDamageType);
 	}
-	else
-	{
-		UTIL_Sparks(ptr->vecEndPos);
-	}
+	
+	UTIL_Sparks(ptr->vecEndPos);
+}
+
+bool COsprey::KeyValue(KeyValueData* pkvd)
+{
+	g_engfuncs.pfnAlertMessage(at_console, "Keyvalue for osprey is: %s, Keyname is: %s\n", pkvd->szValue, pkvd->szKeyName);
+
+	return CBaseMonster::KeyValue(pkvd);
 }

@@ -64,24 +64,6 @@ void CGrenade::Explode(TraceResult* pTrace, int bitsDamageType)
 
 	int iContents = UTIL_PointContents(pev->origin);
 
-	MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY, pev->origin);
-	WRITE_BYTE(TE_EXPLOSION);	// This makes a dynamic light and the explosion sprites/sound
-	WRITE_COORD(pev->origin.x); // Send to PAS because of the sound
-	WRITE_COORD(pev->origin.y);
-	WRITE_COORD(pev->origin.z);
-	if (iContents != CONTENTS_WATER)
-	{
-		WRITE_SHORT(g_sModelIndexFireball);
-	}
-	else
-	{
-		WRITE_SHORT(g_sModelIndexWExplosion);
-	}
-	WRITE_BYTE((pev->dmg - 50) * .60); // scale * 10
-	WRITE_BYTE(15);					   // framerate
-	WRITE_BYTE(TE_EXPLFLAG_NONE);
-	MESSAGE_END();
-
 	CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, NORMAL_EXPLOSION_VOLUME, 3.0);
 	entvars_t* pevOwner;
 	if (pev->owner)
@@ -97,6 +79,8 @@ void CGrenade::Explode(TraceResult* pTrace, int bitsDamageType)
 
 	RadiusDamage(origin, pev, pevOwner, pev->dmg, CLASS_NONE, bitsDamageType);
 
+	UTIL_Explode(pev->origin, 15, ((pev->dmg - 50.0f) * 0.6f));
+	
 	if (RANDOM_FLOAT(0, 1) < 0.5)
 	{
 		UTIL_DecalTrace(pTrace, DECAL_SCORCH1);

@@ -145,10 +145,6 @@ void CShotgun::PrimaryAttack()
 	PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usSingleFire, 0.0, g_vecZero, g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
 
 
-	if (0 == m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
-		// HEV suit - indicate out of ammo condition
-		m_pPlayer->SetSuitUpdate("!HEV_AMO0", false, 0);
-
 	//if (m_iClip != 0)
 	m_flPumpTime = gpGlobals->time + 0.5;
 
@@ -219,10 +215,6 @@ void CShotgun::SecondaryAttack()
 
 	PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usDoubleFire, 0.0, g_vecZero, g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
 
-	if (0 == m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
-		// HEV suit - indicate out of ammo condition
-		m_pPlayer->SetSuitUpdate("!HEV_AMO0", false, 0);
-
 	//if (m_iClip != 0)
 	m_flPumpTime = gpGlobals->time + 0.95;
 
@@ -287,6 +279,8 @@ void CShotgun::Reload()
 void CShotgun::WeaponIdle()
 {
 	ResetEmptySound();
+
+	m_iUnk_0x88 = 0;
 
 	m_pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
 

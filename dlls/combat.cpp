@@ -1442,14 +1442,6 @@ void CBaseEntity::FireBullets(unsigned int cShots, Vector vecSrc, Vector vecDirS
 			else
 				switch (iBulletType)
 				{
-				case BULLET_PLAYER_BUCKSHOT:
-					// make distance based!
-					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgBuckshot, vecDir, &tr, DMG_BULLET);
-
-					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-					DecalGunshot(&tr, iBulletType);
-					break;
-
 				default:
 				case BULLET_MONSTER_9MM:
 					pEntity->TraceAttack(pevAttacker, gSkillData.monDmg9MM, vecDir, &tr, DMG_BULLET);
@@ -1488,6 +1480,7 @@ void CBaseEntity::FireBullets(unsigned int cShots, Vector vecSrc, Vector vecDirS
 		// make bullet trails
 		UTIL_BubbleTrail(vecSrc, tr.vecEndPos, (flDistance * tr.flFraction) / 64.0);
 	}
+	UTIL_Muzzleflash(vecSrc, 15, 1, Vector(255, 255, 128), 0);
 	ApplyMultiDamage(pev, pevAttacker);
 }
 
@@ -1555,9 +1548,9 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgMP5, vecDir, &tr, DMG_BULLET);
 					break;
 
-				case BULLET_PLAYER_BUCKSHOT:
+				case BULLET_PLAYER_SNIPER:
 					// make distance based!
-					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgBuckshot, vecDir, &tr, DMG_BULLET);
+					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgSniper, vecDir, &tr, DMG_BULLET);
 					break;
 
 				case BULLET_PLAYER_357:
@@ -1579,6 +1572,7 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 		// make bullet trails
 		UTIL_BubbleTrail(vecSrc, tr.vecEndPos, (flDistance * tr.flFraction) / 64.0);
 	}
+	UTIL_Muzzleflash(vecSrc, 15, 1, Vector(255,255,128), 0);
 	ApplyMultiDamage(pev, pevAttacker);
 
 	return Vector(x * vecSpread.x, y * vecSpread.y, 0.0);

@@ -558,6 +558,7 @@ void CWorld::Precache()
 
 	// sounds used from C physics code
 	PRECACHE_SOUND("common/null.wav"); // clears sound channels
+	PRECACHE_SOUND("ambience/drip.wav");
 
 	PRECACHE_SOUND("items/suitchargeok1.wav"); //!!! temporary sound for respawning weapons.
 	PRECACHE_SOUND("items/gunpickup2.wav");	   // player picks up a gun.
@@ -581,6 +582,9 @@ void CWorld::Precache()
 	PRECACHE_SOUND("weapons/ric3.wav");
 	PRECACHE_SOUND("weapons/ric4.wav");
 	PRECACHE_SOUND("weapons/ric5.wav");
+	PRECACHE_SOUND("weapons/explode3.wav");
+	PRECACHE_SOUND("weapons/explode4.wav");
+	PRECACHE_SOUND("weapons/explode5.wav");
 	//
 	// Setup light animation tables. 'a' is total darkness, 'z' is maxbright.
 	//

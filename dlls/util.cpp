@@ -1225,6 +1225,99 @@ Vector UTIL_RandomBloodVector()
 	return direction;
 }
 
+void UTIL_Smoke(const Vector& a1, byte a2, byte a3, int a4)
+{
+	if (a4 == -1)
+		a4 = g_sModelIndexSmoke;
+
+	MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, a1);
+	WRITE_BYTE(TE_SMOKE);
+	WRITE_COORD(a1.x);
+	WRITE_COORD(a1.y);
+	WRITE_COORD(a1.z);
+	WRITE_SHORT(a4);
+	WRITE_BYTE(a3);
+	WRITE_BYTE(a2);
+	MESSAGE_END();
+}
+
+void UTIL_Explode(const Vector& a1, byte a2, byte a3)
+{
+	g_CrossbowBolt = CBaseEntity::Create("crossbow_bolt", a1, g_vecZero);
+	g_CrossbowBolt->pev->effects = EF_NODRAW;
+	g_CrossbowBolt->pev->takedamage = 0.0f;
+
+	MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, a1);
+	WRITE_BYTE(TE_EXPLOSION);
+	WRITE_COORD(a1.x);
+	WRITE_COORD(a1.y);
+	WRITE_COORD(a1.z);
+
+	short explodeType = g_sModelIndexWExplosion;
+
+	if (UTIL_PointContents(a1) != CONTENTS_WATER)
+	{
+		explodeType = g_sModelIndexFireball;
+	}
+
+	WRITE_SHORT(explodeType);
+	WRITE_BYTE(a3);
+	WRITE_BYTE(a2);
+	WRITE_BYTE(TE_TAREXPLOSION);
+	MESSAGE_END();
+
+	switch (RANDOM_LONG(0, 2))
+	{
+	case 0:
+		EMIT_SOUND_DYN(g_CrossbowBolt->edict(), CHAN_STATIC, "weapons/explode3.wav", 1, ATTN_NORM, 0, 100);
+		break;
+	case 1:
+		EMIT_SOUND_DYN(g_CrossbowBolt->edict(), CHAN_STATIC, "weapons/explode4.wav", 1, ATTN_NORM, 0, 100);
+		break;
+	case 2:
+		EMIT_SOUND_DYN(g_CrossbowBolt->edict(), CHAN_STATIC, "weapons/explode5.wav", 1, ATTN_NORM, 0, 100);
+		break;
+	}
+
+	UTIL_Remove(g_CrossbowBolt);
+}
+
+void UTIL_Muzzleflash(const Vector& a1, byte a2, byte a3, const Vector& a4, byte a5)
+{
+	MESSAGE_BEGIN(MSG_BROADCAST, SVC_TEMPENTITY);
+	WRITE_BYTE(TE_DLIGHT);
+	WRITE_COORD(a1.x);
+	WRITE_COORD(a1.y);
+	WRITE_COORD(a1.z);
+	WRITE_BYTE(a2);
+	WRITE_BYTE(a4.x);
+	WRITE_BYTE(a4.y);
+	WRITE_BYTE(a4.z);
+	WRITE_BYTE(a3);
+	WRITE_BYTE(a5);
+	MESSAGE_END();
+}
+
+void UTIL_BreakModel(const Vector& a1, const Vector& a2, const Vector& a3, byte a4, int a5, byte a6, byte a7, byte a8)
+{
+	MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, a1);
+	WRITE_BYTE(TE_BREAKMODEL);
+	WRITE_COORD(a1.x);
+	WRITE_COORD(a1.y);
+	WRITE_COORD(a1.z);
+	WRITE_COORD(a2.x);
+	WRITE_COORD(a2.y);
+	WRITE_COORD(a2.z);
+	WRITE_COORD(a3.x);
+	WRITE_COORD(a3.y);
+	WRITE_COORD(a3.z);
+	WRITE_BYTE(a4);
+	WRITE_SHORT(a5);
+	WRITE_BYTE(a6);
+	WRITE_BYTE(a7);
+	WRITE_BYTE(a8);
+	MESSAGE_END();
+}
 
 void UTIL_BloodDecalTrace(TraceResult* pTrace, int bloodColor)
 {

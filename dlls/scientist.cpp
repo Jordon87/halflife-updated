@@ -28,13 +28,15 @@
 #include "soundent.h"
 
 
-#define NUM_SCIENTIST_HEADS 4 // four heads available for scientist model
+#define NUM_SCIENTIST_HEADS 6 // six heads available for scientist model
 enum
 {
 	HEAD_GLASSES = 0,
 	HEAD_EINSTEIN = 1,
 	HEAD_LUTHER = 2,
-	HEAD_SLICK = 3
+	HEAD_SLICK = 3,
+	HEAD_BLACK = 4,
+	HEAD_WHITE = 5
 };
 
 enum
@@ -105,8 +107,6 @@ public:
 
 	void TalkInit();
 
-	char* GetScientistModel() const;
-
 	void Killed(entvars_t* pevAttacker, int iGib) override;
 
 	bool Save(CSave& save) override;
@@ -119,6 +119,7 @@ private:
 	float m_painTime;
 	float m_healTime;
 	float m_fearTime;
+	int m_iFirstSpawn;
 };
 
 LINK_ENTITY_TO_CLASS(monster_scientist, CScientist);
@@ -128,20 +129,10 @@ TYPEDESCRIPTION CScientist::m_SaveData[] =
 		DEFINE_FIELD(CScientist, m_painTime, FIELD_TIME),
 		DEFINE_FIELD(CScientist, m_healTime, FIELD_TIME),
 		DEFINE_FIELD(CScientist, m_fearTime, FIELD_TIME),
+		DEFINE_FIELD(CScientist, m_iFirstSpawn, FIELD_INTEGER),
 };
 
 IMPLEMENT_SAVERESTORE(CScientist, CTalkMonster);
-
-char* CScientist::GetScientistModel() const
-{
-	char* pszOverride = (char*)CVAR_GET_STRING("_sv_override_scientist_mdl");
-	if (pszOverride && strlen(pszOverride) > 5) // at least requires ".mdl"
-	{
-		return pszOverride;
-	}
-
-	return "models/scientist.mdl";
-}
 
 //=========================================================
 // AI Schedules Specific to this monster
@@ -658,14 +649,30 @@ void CScientist::HandleAnimEvent(MonsterEvent_t* pEvent)
 //=========================================================
 void CScientist::Spawn()
 {
+	Precache();
+	
+	// White hands
+	pev->skin = 0;
+
 	if (pev->body == -1)
 	{														 // -1 chooses a random head
 		pev->body = RANDOM_LONG(0, NUM_SCIENTIST_HEADS - 1); // pick a head, any head
 	}
 
-	Precache();
+	// Luther is black, make his hands black
+	if (pev->body == HEAD_LUTHER)
+		pev->skin = 1;
 
-	SET_MODEL(ENT(pev), GetScientistModel());
+	if (pev->body == 6)
+	{
+		pev->body == RANDOM_LONG(0, 3 - 1);
+		SET_MODEL(ENT(pev), "models/cleansuit_scientist.mdl");
+	}
+	else
+	{
+		SET_MODEL(ENT(pev), "models/scientist.mdl");
+	}
+
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
 
 	pev->solid = SOLID_SLIDEBOX;
@@ -680,13 +687,6 @@ void CScientist::Spawn()
 
 	m_afCapability = bits_CAP_HEAR | bits_CAP_TURN_HEAD | bits_CAP_OPEN_DOORS | bits_CAP_AUTO_DOORS | bits_CAP_USE;
 
-	// White hands
-	pev->skin = 0;
-
-	// Luther is black, make his hands black
-	if (pev->body == HEAD_LUTHER)
-		pev->skin = 1;
-
 	MonsterInit();
 	SetUse(&CScientist::FollowerUse);
 }
@@ -696,18 +696,21 @@ void CScientist::Spawn()
 //=========================================================
 void CScientist::Precache()
 {
-	PRECACHE_MODEL(GetScientistModel());
+	if (m_iFirstSpawn == 1)
+	{
+		// every new scientist must call this, otherwise
+		// when a level is loaded, nobody will talk (time is reset to 0)
+		TalkInit();
+
+		CTalkMonster::Precache();
+	}
+
+	PRECACHE_MODEL("models/scientist.mdl");
 	PRECACHE_SOUND("scientist/sci_pain1.wav");
 	PRECACHE_SOUND("scientist/sci_pain2.wav");
 	PRECACHE_SOUND("scientist/sci_pain3.wav");
 	PRECACHE_SOUND("scientist/sci_pain4.wav");
 	PRECACHE_SOUND("scientist/sci_pain5.wav");
-
-	// every new scientist must call this, otherwise
-	// when a level is loaded, nobody will talk (time is reset to 0)
-	TalkInit();
-
-	CTalkMonster::Precache();
 }
 
 // Init talk data
@@ -746,22 +749,27 @@ void CScientist::TalkInit()
 	m_szGrp[TLK_WOUND] = "SC_WOUND";
 	m_szGrp[TLK_MORTAL] = "SC_MORTAL";
 
+	ALERT(at_console,"Talkdata: %i\n",pev->body);
+
 	// get voice for head
-	switch (pev->body % NUM_SCIENTIST_HEADS)
+	switch (pev->body)
 	{
-	default:
-	case HEAD_GLASSES:
-		m_voicePitch = 105;
-		break; //glasses
 	case HEAD_EINSTEIN:
-		m_voicePitch = 100;
-		break; //einstein
-	case HEAD_LUTHER:
-		m_voicePitch = 95;
-		break; //luther
 	case HEAD_SLICK:
 		m_voicePitch = 100;
-		break; //slick
+		break; // einstein and slick
+	case HEAD_LUTHER:
+		m_voicePitch = 95;
+		break; // luther
+	case HEAD_BLACK:
+		m_voicePitch = 87;
+		break;
+	case HEAD_WHITE:
+		m_voicePitch = 115;
+		break;
+	default:
+		m_voicePitch = 105;
+		break; //glasses and default
 	}
 }
 
@@ -1159,25 +1167,11 @@ public:
 	void Spawn() override;
 	int Classify() override { return CLASS_HUMAN_PASSIVE; }
 
-	// passed into Precache which is non-const
-	char* GetScientistModel() const;
-
 	bool KeyValue(KeyValueData* pkvd) override;
 	int m_iPose; // which sequence to display
 	static const char* m_szPoses[7];
 };
 const char* CDeadScientist::m_szPoses[] = {"lying_on_back", "lying_on_stomach", "dead_sitting", "dead_hang", "dead_table1", "dead_table2", "dead_table3"};
-
-char* CDeadScientist::GetScientistModel() const
-{
-	char* pszOverride = (char*)CVAR_GET_STRING("_sv_override_scientist_mdl");
-	if (pszOverride && strlen(pszOverride) > 5) // at least requires ".mdl"
-	{
-		return pszOverride;
-	}
-
-	return "models/scientist.mdl";
-}
 
 bool CDeadScientist::KeyValue(KeyValueData* pkvd)
 {
@@ -1196,8 +1190,8 @@ LINK_ENTITY_TO_CLASS(monster_scientist_dead, CDeadScientist);
 //
 void CDeadScientist::Spawn()
 {
-	PRECACHE_MODEL(GetScientistModel());
-	SET_MODEL(ENT(pev), GetScientistModel());
+	PRECACHE_MODEL("models/scientist.mdl");
+	SET_MODEL(ENT(pev), "models/scientist.mdl");
 
 	pev->effects = 0;
 	pev->sequence = 0;
@@ -1278,8 +1272,8 @@ typedef enum
 //
 void CSittingScientist::Spawn()
 {
-	PRECACHE_MODEL(GetScientistModel());
-	SET_MODEL(ENT(pev), GetScientistModel());
+	PRECACHE_MODEL("models/scientist.mdl");
+	SET_MODEL(ENT(pev), "models/scientist.mdl");
 	Precache();
 	InitBoneControllers();
 

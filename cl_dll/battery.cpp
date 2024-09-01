@@ -73,7 +73,7 @@ bool CHudBattery::MsgFunc_Battery(const char* pszName, int iSize, void* pbuf)
 
 bool CHudBattery::Draw(float flTime)
 {
-	if ((gHUD.m_iHideHUDDisplay & HIDEHUD_HEALTH) != 0)
+	if ((gHUD.m_iHideHUDDisplay & HIDEHUD_SUIT) != 0)
 		return true;
 
 	int r, g, b, x, y, a;
@@ -83,10 +83,7 @@ bool CHudBattery::Draw(float flTime)
 
 	rc.top += m_iHeight * ((float)(100 - (V_min(100, m_iBat))) * 0.01); // battery can go from 0 to 100 so * 0.01 goes from 0 to 1
 
-	UnpackRGB(r, g, b, RGB_YELLOWISH);
-
-	if (!gHUD.HasSuit())
-		return true;
+	UnpackRGB(r, g, b, 0x00ffffff);
 
 	// Has health changed? Flash the health #
 	if (0 != m_fFade)

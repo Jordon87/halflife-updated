@@ -128,6 +128,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\dlls\bullsquid.cpp" />
     <ClCompile Include="..\..\dlls\buttons.cpp" />
     <ClCompile Include="..\..\dlls\cbase.cpp" />
+    <ClCompile Include="..\..\dlls\cinematic_camera.cpp" />
     <ClCompile Include="..\..\dlls\client.cpp" />
     <ClCompile Include="..\..\dlls\combat.cpp" />
     <ClCompile Include="..\..\dlls\controller.cpp" />
@@ -136,7 +137,6 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\dlls\defaultai.cpp" />
     <ClCompile Include="..\..\dlls\doors.cpp" />
     <ClCompile Include="..\..\dlls\effects.cpp" />
-    <ClCompile Include="..\..\dlls\egon.cpp" />
     <ClCompile Include="..\..\dlls\explode.cpp" />
     <ClCompile Include="..\..\dlls\flyingmonster.cpp" />
     <ClCompile Include="..\..\dlls\func_break.cpp" />
@@ -144,7 +144,6 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\dlls\game.cpp" />
     <ClCompile Include="..\..\dlls\gamerules.cpp" />
     <ClCompile Include="..\..\dlls\gargantua.cpp" />
-    <ClCompile Include="..\..\dlls\gauss.cpp" />
     <ClCompile Include="..\..\dlls\genericmonster.cpp" />
     <ClCompile Include="..\..\dlls\ggrenade.cpp" />
     <ClCompile Include="..\..\dlls\gman.cpp" />
@@ -167,6 +166,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\dlls\leech.cpp" />
     <ClCompile Include="..\..\dlls\lights.cpp" />
     <ClCompile Include="..\..\dlls\maprules.cpp" />
+    <ClCompile Include="..\..\dlls\massassin.cpp" />
     <ClCompile Include="..\..\dlls\monstermaker.cpp" />
     <ClCompile Include="..\..\dlls\monsters.cpp" />
     <ClCompile Include="..\..\dlls\monsterstate.cpp" />
@@ -178,6 +178,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\dlls\observer.cpp" />
     <ClCompile Include="..\..\dlls\osprey.cpp" />
     <ClCompile Include="..\..\dlls\pathcorner.cpp" />
+    <ClCompile Include="..\..\dlls\pipe.cpp" />
     <ClCompile Include="..\..\dlls\plane.cpp" />
     <ClCompile Include="..\..\dlls\plats.cpp" />
     <ClCompile Include="..\..\dlls\player.cpp" />
@@ -192,6 +193,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\dlls\shotgun.cpp" />
     <ClCompile Include="..\..\dlls\singleplay_gamerules.cpp" />
     <ClCompile Include="..\..\dlls\skill.cpp" />
+    <ClCompile Include="..\..\dlls\sniper.cpp" />
     <ClCompile Include="..\..\dlls\sound.cpp" />
     <ClCompile Include="..\..\dlls\soundent.cpp" />
     <ClCompile Include="..\..\dlls\spectator.cpp" />
@@ -257,6 +259,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClInclude Include="..\..\dlls\basemonster.h" />
     <ClInclude Include="..\..\dlls\cbase.h" />
     <ClInclude Include="..\..\dlls\cdll_dll.h" />
+    <ClInclude Include="..\..\dlls\cinematic_camera.h" />
     <ClInclude Include="..\..\dlls\client.h" />
     <ClInclude Include="..\..\dlls\decals.h" />
     <ClInclude Include="..\..\dlls\defaultai.h" />
@@ -285,6 +288,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClInclude Include="..\..\dlls\squadmonster.h" />
     <ClInclude Include="..\..\dlls\talkmonster.h" />
     <ClInclude Include="..\..\dlls\teamplay_gamerules.h" />
+    <ClInclude Include="..\..\dlls\triggers.h" />
     <ClInclude Include="..\..\dlls\trains.h" />
     <ClInclude Include="..\..\dlls\UserMessages.h" />
     <ClInclude Include="..\..\dlls\util.h" />

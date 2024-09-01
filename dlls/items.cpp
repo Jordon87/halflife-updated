@@ -66,8 +66,8 @@ void CWorldItem::Spawn()
 	case 43: // ITEM_SECURITY:
 		pEntity = CBaseEntity::Create("item_security", pev->origin, pev->angles);
 		break;
-	case 45: // ITEM_SUIT:
-		pEntity = CBaseEntity::Create("item_suit", pev->origin, pev->angles);
+	case 45: // ITEM_BODYARMOUR:
+		pEntity = CBaseEntity::Create("item_bodyarmour", pev->origin, pev->angles);
 		break;
 	}
 
@@ -166,36 +166,30 @@ void CItem::Materialize()
 	SetTouch(&CItem::ItemTouch);
 }
 
-#define SF_SUIT_SHORTLOGON 0x0001
-
-class CItemSuit : public CItem
+class CItemBodyArmour : public CItem
 {
 	void Spawn() override
 	{
 		Precache();
-		SET_MODEL(ENT(pev), "models/w_suit.mdl");
+		SET_MODEL(ENT(pev), "models/w_kevlar.mdl");
 		CItem::Spawn();
 	}
 	void Precache() override
 	{
-		PRECACHE_MODEL("models/w_suit.mdl");
+		PRECACHE_MODEL("models/w_kevlar.mdl");
+		PRECACHE_SOUND("player/kevlar_zipper.wav");
 	}
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
-		if (pPlayer->HasSuit())
-			return false;
-
-		if ((pev->spawnflags & SF_SUIT_SHORTLOGON) != 0)
-			EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_A0"); // short version of suit logon,
-		else
-			EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_AAx"); // long version of suit logon
+		EMIT_SOUND_DYN(ENT(pev), CHAN_STATIC, "player/kevlar_zipper.wav", 1, ATTN_NORM, 0, RANDOM_LONG(100,150));
 
 		pPlayer->SetHasSuit(true);
+		pPlayer->pev->armorvalue = 100.0f;
 		return true;
 	}
 };
 
-LINK_ENTITY_TO_CLASS(item_suit, CItemSuit);
+LINK_ENTITY_TO_CLASS(item_bodyarmour, CItemBodyArmour);
 
 
 
@@ -214,46 +208,44 @@ class CItemBattery : public CItem
 	}
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
-		if (pPlayer->pev->deadflag != DEAD_NO)
-		{
-			return false;
-		}
-
-		if ((pPlayer->pev->armorvalue < MAX_NORMAL_BATTERY) &&
-			pPlayer->HasSuit())
-		{
-			int pct;
-			char szcharge[64];
-
-			pPlayer->pev->armorvalue += gSkillData.batteryCapacity;
-			pPlayer->pev->armorvalue = V_min(pPlayer->pev->armorvalue, MAX_NORMAL_BATTERY);
-
-			EMIT_SOUND(pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
-
-			MESSAGE_BEGIN(MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev);
-			WRITE_STRING(STRING(pev->classname));
-			MESSAGE_END();
-
-
-			// Suit reports new power level
-			// For some reason this wasn't working in release build -- round it.
-			pct = (int)((float)(pPlayer->pev->armorvalue * 100.0) * (1.0 / MAX_NORMAL_BATTERY) + 0.5);
-			pct = (pct / 5);
-			if (pct > 0)
-				pct--;
-
-			sprintf(szcharge, "!HEV_%1dP", pct);
-
-			//EMIT_SOUND_SUIT(ENT(pev), szcharge);
-			pPlayer->SetSuitUpdate(szcharge, false, SUIT_NEXT_IN_30SEC);
-			return true;
-		}
 		return false;
 	}
 };
 
 LINK_ENTITY_TO_CLASS(item_battery, CItemBattery);
 
+class CItemFlashLight : public CItem
+{
+	void Spawn() override
+	{
+		Precache();
+		SET_MODEL(ENT(pev), "models/w_flashlight.mdl");
+		CItem::Spawn();
+	}
+	void Precache() override
+	{
+		PRECACHE_MODEL("models/w_flashlight.mdl");
+		PRECACHE_SOUND("items/gunpickup2.wav");
+	}
+	bool MyTouch(CBasePlayer* pPlayer) override
+	{
+		if (pPlayer->pev->deadflag != DEAD_NO)
+			return false;
+
+		if ((pPlayer->pev->weapons & (1ULL << WEAPON_FLASHLIGHT)) != 0)
+		{
+			return false;
+		}
+
+		pPlayer->SetWeaponBit(WEAPON_FLASHLIGHT);
+
+		EMIT_SOUND_DYN(ENT(pev), CHAN_STATIC, "items/gunpickup2.wav", 1, ATTN_NORM, 0, 100);
+		pPlayer->m_flFlashLightTime = gpGlobals->time;
+		return true;
+	}
+};
+
+LINK_ENTITY_TO_CLASS(item_flashlight, CItemFlashLight);
 
 class CItemAntidote : public CItem
 {
@@ -269,8 +261,6 @@ class CItemAntidote : public CItem
 	}
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
-		pPlayer->SetSuitUpdate("!HEV_DET4", false, SUIT_NEXT_IN_1MIN);
-
 		pPlayer->m_rgItems[ITEM_ANTIDOTE] += 1;
 		return true;
 	}
@@ -299,41 +289,3 @@ class CItemSecurity : public CItem
 };
 
 LINK_ENTITY_TO_CLASS(item_security, CItemSecurity);
-
-class CItemLongJump : public CItem
-{
-	void Spawn() override
-	{
-		Precache();
-		SET_MODEL(ENT(pev), "models/w_longjump.mdl");
-		CItem::Spawn();
-	}
-	void Precache() override
-	{
-		PRECACHE_MODEL("models/w_longjump.mdl");
-	}
-	bool MyTouch(CBasePlayer* pPlayer) override
-	{
-		if (pPlayer->m_fLongJump)
-		{
-			return false;
-		}
-
-		if (pPlayer->HasSuit())
-		{
-			pPlayer->m_fLongJump = true; // player now has longjump module
-
-			g_engfuncs.pfnSetPhysicsKeyValue(pPlayer->edict(), "slj", "1");
-
-			MESSAGE_BEGIN(MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev);
-			WRITE_STRING(STRING(pev->classname));
-			MESSAGE_END();
-
-			EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_A1"); // Play the longjump sound UNDONE: Kelly? correct sound?
-			return true;
-		}
-		return false;
-	}
-};
-
-LINK_ENTITY_TO_CLASS(item_longjump, CItemLongJump);

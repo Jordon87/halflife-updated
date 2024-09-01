@@ -102,9 +102,6 @@ bool CHudFlashlight::Draw(float flTime)
 	int r, g, b, x, y, a;
 	Rect rc;
 
-	if (!gHUD.HasSuit())
-		return true;
-
 	if (m_fOn)
 		a = 225;
 	else
@@ -113,7 +110,7 @@ bool CHudFlashlight::Draw(float flTime)
 	if (m_flBat < 0.20)
 		UnpackRGB(r, g, b, RGB_REDISH);
 	else
-		UnpackRGB(r, g, b, RGB_YELLOWISH);
+		UnpackRGB(r, g, b, 0x00ffffff);
 
 	ScaleColors(r, g, b, a);
 

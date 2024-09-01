@@ -1650,6 +1650,8 @@ float TEXTURETYPE_PlaySound(TraceResult* ptr, Vector vecSrc, Vector vecEnd, int 
 	const char* rgsz[4];
 	int cnt;
 	float fattn = ATTN_NORM;
+	short modelIndex = 0;
+	byte flags = 0;
 
 	if (!g_pGameRules->PlayTextureSounds())
 		return 0.0;
@@ -1700,12 +1702,17 @@ float TEXTURETYPE_PlaySound(TraceResult* ptr, Vector vecSrc, Vector vecEnd, int 
 	switch (chTextureType)
 	{
 	default:
-	case CHAR_TEX_CONCRETE:
 		fvol = 0.9;
 		fvolbar = 0.6;
 		rgsz[0] = "player/pl_step1.wav";
 		rgsz[1] = "player/pl_step2.wav";
 		cnt = 2;
+
+		if (chTextureType == CHAR_TEX_CONCRETE_VISITORS)
+			modelIndex = g_sModelIndexConcreteGib;
+		else
+			modelIndex = -1;
+
 		break;
 	case CHAR_TEX_METAL:
 		fvol = 0.9;
@@ -1715,12 +1722,30 @@ float TEXTURETYPE_PlaySound(TraceResult* ptr, Vector vecSrc, Vector vecEnd, int 
 		cnt = 2;
 		break;
 	case CHAR_TEX_DIRT:
+	case CHAR_TEX_ROCK:
+	case CHAR_TEX_SMOKE:
 		fvol = 0.9;
 		fvolbar = 0.1;
 		rgsz[0] = "player/pl_dirt1.wav";
 		rgsz[1] = "player/pl_dirt2.wav";
 		rgsz[2] = "player/pl_dirt3.wav";
 		cnt = 3;
+
+		if (chTextureType == CHAR_TEX_SMOKE)
+		{
+			if (iBulletType != BULLET_PLAYER_CROWBAR)
+				UTIL_Smoke(ptr->vecEndPos, 25, 12, -1);
+		}
+
+		if (chTextureType != CHAR_TEX_ROCK)
+		{
+			modelIndex = -1;
+			flags = BREAK_CONCRETE;
+		}
+
+		modelIndex = g_sModelIndexWoodGib;
+		flags = BREAK_CONCRETE;
+
 		break;
 	case CHAR_TEX_VENT:
 		fvol = 0.5;
@@ -1745,6 +1770,7 @@ float TEXTURETYPE_PlaySound(TraceResult* ptr, Vector vecSrc, Vector vecEnd, int 
 		rgsz[3] = "player/pl_tile4.wav";
 		cnt = 4;
 		break;
+	case CHAR_TEX_SLOSH_VISITORS:
 	case CHAR_TEX_SLOSH:
 		fvol = 0.9;
 		fvolbar = 0.0;
@@ -1753,6 +1779,12 @@ float TEXTURETYPE_PlaySound(TraceResult* ptr, Vector vecSrc, Vector vecEnd, int 
 		rgsz[2] = "player/pl_slosh2.wav";
 		rgsz[3] = "player/pl_slosh4.wav";
 		cnt = 4;
+
+		if (chTextureType == CHAR_TEX_SLOSH_VISITORS)
+			modelIndex = g_sModelIndexSloshGib;
+		else
+			modelIndex = -1;
+
 		break;
 	case CHAR_TEX_WOOD:
 		fvol = 0.9;
@@ -1761,6 +1793,18 @@ float TEXTURETYPE_PlaySound(TraceResult* ptr, Vector vecSrc, Vector vecEnd, int 
 		rgsz[1] = "debris/wood2.wav";
 		rgsz[2] = "debris/wood3.wav";
 		cnt = 3;
+
+		if (chTextureType == CHAR_TEX_WOOD_VISITORS)
+		{
+			modelIndex = g_sModelIndexWoodGib;
+			flags = BREAK_WOOD;
+		}
+		else
+		{
+			modelIndex = -1;
+			flags = BREAK_WOOD;
+		}
+
 		break;
 	case CHAR_TEX_GLASS:
 	case CHAR_TEX_COMPUTER:
@@ -1812,6 +1856,11 @@ float TEXTURETYPE_PlaySound(TraceResult* ptr, Vector vecSrc, Vector vecEnd, int 
 				// case 1: EMIT_SOUND(ENT(pev), CHAN_VOICE, "buttons/spark6.wav", flVolume, ATTN_NORM);	break;
 			}
 		}
+	}
+	
+	if (iBulletType != BULLET_PLAYER_CROWBAR && modelIndex != -1)
+	{
+		UTIL_BreakModel(ptr->vecEndPos, Vector(25, 25, 8), gpGlobals->v_forward * 100, 10, modelIndex, 1, 50, flags);
 	}
 
 	// play material hit sound

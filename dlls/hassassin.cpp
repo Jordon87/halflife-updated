@@ -156,7 +156,7 @@ int CHAssassin::ISoundMask()
 //=========================================================
 int CHAssassin::Classify()
 {
-	return CLASS_HUMAN_MILITARY;
+	return CLASS_HUMAN_BLACKOPS;
 }
 
 //=========================================================

@@ -31,7 +31,7 @@ class CApache : public CBaseMonster
 
 	void Spawn() override;
 	void Precache() override;
-	int Classify() override { return CLASS_HUMAN_MILITARY; }
+	int Classify() override { return pev->body != 0 ? CLASS_HUMAN_BLACKOPS : CLASS_HUMAN_MILITARY; }
 	int BloodColor() override { return DONT_BLEED; }
 	void Killed(entvars_t* pevAttacker, int iGib) override;
 	void GibMonster() override;
@@ -49,12 +49,10 @@ class CApache : public CBaseMonster
 	void EXPORT StartupUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value);
 	void EXPORT NullThink();
 
-	void ShowDamage();
 	void Flight();
 	void FireRocket();
 	bool FireGun();
 
-	bool TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType) override;
 	void TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType) override;
 
 	int m_iRockets;
@@ -81,7 +79,6 @@ class CApache : public CBaseMonster
 
 	float m_flGoalSpeed;
 
-	int m_iDoSmokePuff;
 	CBeam* m_pBeam;
 };
 LINK_ENTITY_TO_CLASS(monster_apache, CApache);
@@ -105,7 +102,6 @@ TYPEDESCRIPTION CApache::m_SaveData[] =
 		//	DEFINE_FIELD( CApache, m_iBodyGibs, FIELD_INTEGER ),
 		DEFINE_FIELD(CApache, m_pBeam, FIELD_CLASSPTR),
 		DEFINE_FIELD(CApache, m_flGoalSpeed, FIELD_FLOAT),
-		DEFINE_FIELD(CApache, m_iDoSmokePuff, FIELD_INTEGER),
 };
 IMPLEMENT_SAVERESTORE(CApache, CBaseMonster);
 
@@ -117,7 +113,15 @@ void CApache::Spawn()
 	pev->movetype = MOVETYPE_FLY;
 	pev->solid = SOLID_BBOX;
 
-	SET_MODEL(ENT(pev), "models/apache.mdl");
+	if (pev->body == 1)
+	{
+		SET_MODEL(ENT(pev), "models/blkop_apache.mdl");
+	}
+	else
+	{
+		SET_MODEL(ENT(pev), "models/apache.mdl");
+	}
+	
 	UTIL_SetSize(pev, Vector(-32, -32, -64), Vector(32, 32, 0));
 	UTIL_SetOrigin(pev, pev->origin);
 
@@ -153,7 +157,14 @@ void CApache::Spawn()
 
 void CApache::Precache()
 {
-	PRECACHE_MODEL("models/apache.mdl");
+	if (pev->body == 0)
+	{
+		PRECACHE_MODEL("models/apache.mdl");
+	}
+	else
+	{
+		PRECACHE_MODEL("models/blkop_apache.mdl");
+	}
 
 	PRECACHE_SOUND("apache/ap_rotor1.wav");
 	PRECACHE_SOUND("apache/ap_rotor2.wav");
@@ -230,6 +241,11 @@ void CApache::DyingThink()
 		FCheckAITrigger();
 
 		// random explosions
+		pev->origin.x + RANDOM_FLOAT(-150, 150);
+		pev->origin.y + RANDOM_FLOAT(-150, 150);
+		pev->origin.z + RANDOM_FLOAT(-150, 150);
+		UTIL_Explode(pev->origin, 12, RANDOM_LONG(0,29) + 30);
+
 		MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, pev->origin);
 		WRITE_BYTE(TE_EXPLOSION); // This just makes a dynamic light now
 		WRITE_COORD(pev->origin.x + RANDOM_FLOAT(-150, 150));
@@ -448,8 +464,6 @@ void CApache::HuntThink()
 	StudioFrameAdvance();
 	pev->nextthink = gpGlobals->time + 0.1;
 
-	ShowDamage();
-
 	if (m_pGoalEnt == NULL && !FStringNull(pev->target)) // this monster has a target
 	{
 		m_pGoalEnt = UTIL_FindEntityByTargetname(NULL, STRING(pev->target));
@@ -563,7 +577,7 @@ void CApache::HuntThink()
 	Vector vecEst = (gpGlobals->v_forward * 800 + pev->velocity).Normalize();
 	// ALERT( at_console, "%d %d %d %4.2f\n", pev->angles.x < 0, DotProduct( pev->velocity, gpGlobals->v_forward ) > -100, m_flNextRocket < gpGlobals->time, DotProduct( m_vecTarget, vecEst ) );
 
-	if ((m_iRockets % 2) == 1)
+	if (!(m_iRockets % 2) && gpGlobals->time > m_flNextRocket)
 	{
 		FireRocket();
 		m_flNextRocket = gpGlobals->time + 0.5;
@@ -586,7 +600,30 @@ void CApache::HuntThink()
 
 					UTIL_TraceLine(pev->origin, pev->origin + vecEst * 4096, ignore_monsters, edict(), &tr);
 					if ((tr.vecEndPos - m_posTarget).Length() < 512)
-						FireRocket();
+					{
+						if (RANDOM_FLOAT(0.0, 100.0f) >= 1.0f)
+						{
+							FireRocket();
+							m_flNextRocket = gpGlobals->time + 0.5f;
+						}
+						else
+						{
+							int i = 0;
+
+							if (m_iRockets <= 0)
+							{
+								m_iRockets = 10;
+								m_flNextRocket = gpGlobals->time + 10.0f;
+							}
+
+							do
+							{
+								ALERT(at_console, "Firing rocket no %i\n", i);
+								++i;
+							}
+							while ( i < m_iRockets ); 
+						}
+					}
 				}
 			}
 			else
@@ -891,97 +928,16 @@ bool CApache::FireGun()
 	return false;
 }
 
-
-
-void CApache::ShowDamage()
-{
-	if (m_iDoSmokePuff > 0 || RANDOM_LONG(0, 99) > pev->health)
-	{
-		MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, pev->origin);
-		WRITE_BYTE(TE_SMOKE);
-		WRITE_COORD(pev->origin.x);
-		WRITE_COORD(pev->origin.y);
-		WRITE_COORD(pev->origin.z - 32);
-		WRITE_SHORT(g_sModelIndexSmoke);
-		WRITE_BYTE(RANDOM_LONG(0, 9) + 20); // scale * 10
-		WRITE_BYTE(12);						// framerate
-		MESSAGE_END();
-	}
-	if (m_iDoSmokePuff > 0)
-		m_iDoSmokePuff--;
-}
-
-
-bool CApache::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType)
-{
-	if (pevInflictor->owner == edict())
-		return false;
-
-	if ((bitsDamageType & DMG_BLAST) != 0)
-	{
-		flDamage *= 2;
-	}
-
-	/*
-	if ( (bitsDamageType & DMG_BULLET) && flDamage > 50)
-	{
-		// clip bullet damage at 50
-		flDamage = 50;
-	}
-	*/
-
-	// ALERT( at_console, "%.0f\n", flDamage );
-	const bool result = CBaseEntity::TakeDamage(pevInflictor, pevAttacker, flDamage, bitsDamageType);
-
-	//Are we damaged at all?
-	if (pev->health < pev->max_health)
-	{
-		//Took some damage.
-		SetConditions(bits_COND_LIGHT_DAMAGE);
-
-		if (pev->health < (pev->max_health / 2))
-		{
-			//Seriously damaged now.
-			SetConditions(bits_COND_HEAVY_DAMAGE);
-		}
-		else
-		{
-			//Maybe somebody healed us somehow (trigger_hurt with negative damage?), clear this.
-			ClearConditions(bits_COND_HEAVY_DAMAGE);
-		}
-	}
-	else
-	{
-		//Maybe somebody healed us somehow (trigger_hurt with negative damage?), clear this.
-		ClearConditions(bits_COND_LIGHT_DAMAGE);
-	}
-
-	return result;
-}
-
-
-
 void CApache::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType)
 {
 	// ALERT( at_console, "%d %.0f\n", ptr->iHitgroup, flDamage );
 
-	// ignore blades
-	if (ptr->iHitgroup == 6 && (bitsDamageType & (DMG_ENERGYBEAM | DMG_BULLET | DMG_CLUB)) != 0)
-		return;
-
-	// hit hard, hits cockpit, hits engines
-	if (flDamage > 50 || ptr->iHitgroup == 1 || ptr->iHitgroup == 2)
+	if ((bitsDamageType & DMG_BLAST) != 0)
 	{
-		// ALERT( at_console, "%.0f\n", flDamage );
-		AddMultiDamage(pevAttacker, this, flDamage, bitsDamageType);
-		m_iDoSmokePuff = 3 + (flDamage / 5.0);
+		TakeDamage(pev, pevAttacker, 60.0f, DMG_BLAST);
 	}
-	else
-	{
-		// do half damage in the body
-		// AddMultiDamage( pevAttacker, this, flDamage / 2.0, bitsDamageType );
-		UTIL_Ricochet(ptr->vecEndPos, 2.0);
-	}
+	
+	UTIL_Ricochet(ptr->vecEndPos, 2.0);
 }
 
 

@@ -72,6 +72,7 @@ public:
 
 // weapon weight factors (for auto-switching)   (-1 = noswitch)
 #define CROWBAR_WEIGHT 0
+#define PIPE_WEIGHT 0
 #define GLOCK_WEIGHT 10
 #define PYTHON_WEIGHT 15
 #define MP5_WEIGHT 15
@@ -85,6 +86,7 @@ public:
 #define SNARK_WEIGHT 5
 #define SATCHEL_WEIGHT -10
 #define TRIPMINE_WEIGHT -10
+#define SNIPER_WEIGHT 20
 
 
 // weapon clip/carry ammo capacities
@@ -112,6 +114,7 @@ public:
 #define SHOTGUN_MAX_CLIP 8
 #define CROSSBOW_MAX_CLIP 5
 #define RPG_MAX_CLIP 1
+#define SNIPER_MAX_CLIP 3
 #define GAUSS_MAX_CLIP WEAPON_NOCLIP
 #define EGON_MAX_CLIP WEAPON_NOCLIP
 #define HORNETGUN_MAX_CLIP WEAPON_NOCLIP
@@ -137,6 +140,7 @@ public:
 #define TRIPMINE_DEFAULT_GIVE 1
 #define SNARK_DEFAULT_GIVE 5
 #define HIVEHAND_DEFAULT_GIVE 8
+#define SNIPER_DEFAULT_GIVE 3
 
 // The amount of ammo given to a player by an ammo item.
 #define AMMO_URANIUMBOX_GIVE 20
@@ -160,6 +164,7 @@ typedef enum
 	BULLET_PLAYER_357,		// python
 	BULLET_PLAYER_BUCKSHOT, // shotgun
 	BULLET_PLAYER_CROWBAR,	// crowbar swipe
+	BULLET_PLAYER_SNIPER,
 
 	BULLET_MONSTER_9MM,
 	BULLET_MONSTER_MP5,
@@ -312,6 +317,8 @@ public:
 	bool m_iPlayEmptySound;
 	bool m_fFireOnEmpty; // True when the gun is empty and the player is still holding down the
 						 // attack key(s)
+	int m_iUnk_0x88;
+	
 	virtual bool PlayEmptySound();
 	virtual void ResetEmptySound();
 
@@ -392,6 +399,10 @@ inline DLL_GLOBAL short g_sModelIndexWExplosion; // holds the index for the unde
 inline DLL_GLOBAL short g_sModelIndexBubbles;	 // holds the index for the bubbles model
 inline DLL_GLOBAL short g_sModelIndexBloodDrop;	 // holds the sprite index for blood drops
 inline DLL_GLOBAL short g_sModelIndexBloodSpray; // holds the sprite index for blood spray (bigger)
+inline DLL_GLOBAL short g_sModelIndexConcreteGib;
+inline DLL_GLOBAL short g_sModelIndexRockGib;
+inline DLL_GLOBAL short g_sModelIndexSloshGib;
+inline DLL_GLOBAL short g_sModelIndexWoodGib;
 
 extern void ClearMultiDamage();
 extern void ApplyMultiDamage(entvars_t* pevInflictor, entvars_t* pevAttacker);
@@ -565,6 +576,49 @@ private:
 	unsigned short m_usCrowbar;
 };
 
+enum pipe_e
+{
+	PIPE_IDLE = 0,
+	PIPE_DRAW,
+	PIPE_HOLSTER,
+	PIPE_ATTACK1HIT,
+	PIPE_ATTACK1MISS,
+	PIPE_ATTACK2MISS,
+	PIPE_ATTACK2HIT,
+	PIPE_ATTACK3MISS,
+	PIPE_ATTACK3HIT
+};
+
+class CPipe : public CBasePlayerWeapon
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	int iItemSlot() override { return 1; }
+	void EXPORT SwingAgain();
+	void EXPORT Smack();
+	bool GetItemInfo(ItemInfo* p) override;
+
+	void PrimaryAttack() override;
+	bool Swing(bool fFirst);
+	bool Deploy() override;
+	void Holster() override;
+	int m_iSwing;
+	TraceResult m_trHit;
+
+	bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+
+private:
+	unsigned short m_usPipe;
+};
+
 enum python_e
 {
 	PYTHON_IDLE1 = 0,
@@ -602,6 +656,43 @@ public:
 
 private:
 	unsigned short m_usFirePython;
+};
+
+enum sniper_e
+{
+	SNIPER_IDLE1 = 0,
+	SNIPER_SHOOT1,
+	SNIPER_SHOOT2,
+	SNIPER_RELOAD,
+	SNIPER_DRAW
+};
+
+class CSniper : public CBasePlayerWeapon
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	int iItemSlot() override { return 3; }
+	bool GetItemInfo(ItemInfo* p) override;
+	void PrimaryAttack() override;
+	void SniperFire();
+	void SecondaryAttack() override;
+	bool Deploy() override;
+	void Holster() override;
+	void Reload() override;
+	void WeaponIdle() override;
+
+	bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+
+private:
+	unsigned short m_usSniper;
 };
 
 enum mp5_e
@@ -671,7 +762,6 @@ public:
 	bool GetItemInfo(ItemInfo* p) override;
 
 	void FireBolt();
-	void FireSniperBolt();
 	void PrimaryAttack() override;
 	void SecondaryAttack() override;
 	bool Deploy() override;

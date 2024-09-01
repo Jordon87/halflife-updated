@@ -118,9 +118,6 @@ void CHalfLifeMultiplay::RefreshSkillData()
 
 	// override some values for multiplay.
 
-	// suitcharger
-	gSkillData.suitchargerCapacity = 30;
-
 	// Crowbar whack
 	gSkillData.plrDmgCrowbar = 25;
 
@@ -144,10 +141,6 @@ void CHalfLifeMultiplay::RefreshSkillData()
 
 	// RPG
 	gSkillData.plrDmgRPG = 120;
-
-	// Egon
-	gSkillData.plrDmgEgonWide = 20;
-	gSkillData.plrDmgEgonNarrow = 10;
 
 	// Hand Grendade
 	gSkillData.plrDmgHandGrenade = 100;

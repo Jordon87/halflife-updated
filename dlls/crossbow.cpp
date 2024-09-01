@@ -95,6 +95,11 @@ int CCrossbowBolt::Classify()
 
 void CCrossbowBolt::BoltTouch(CBaseEntity* pOther)
 {
+	CBasePlayer* pPlayer = (CBasePlayer*)GET_PRIVATE(pev->owner);
+
+	pPlayer->m_pCam->SetPlayer(pPlayer);
+	pPlayer->m_pCam->SetOrigin(g_vecZero);
+
 	SetTouch(NULL);
 	SetThink(NULL);
 
@@ -292,63 +297,7 @@ void CCrossbow::Holster()
 
 void CCrossbow::PrimaryAttack()
 {
-
-#ifdef CLIENT_DLL
-	if (m_pPlayer->m_iFOV != 0 && bIsMultiplayer())
-#else
-	if (m_pPlayer->m_iFOV != 0 && g_pGameRules->IsMultiplayer())
-#endif
-	{
-		FireSniperBolt();
-		return;
-	}
-
 	FireBolt();
-}
-
-// this function only gets called in multiplayer
-void CCrossbow::FireSniperBolt()
-{
-	m_flNextPrimaryAttack = GetNextAttackDelay(0.75);
-
-	if (m_iClip == 0)
-	{
-		PlayEmptySound();
-		return;
-	}
-
-	TraceResult tr;
-
-	m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
-	m_iClip--;
-
-	int flags;
-#if defined(CLIENT_WEAPONS)
-	flags = FEV_NOTHOST;
-#else
-	flags = 0;
-#endif
-
-	PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usCrossbow2, 0.0, g_vecZero, g_vecZero, 0, 0, m_iClip, 0, 0, 0);
-
-	// player "shoot" animation
-	m_pPlayer->SetAnimation(PLAYER_ATTACK1);
-
-	Vector anglesAim = m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle;
-	UTIL_MakeVectors(anglesAim);
-	Vector vecSrc = m_pPlayer->GetGunPosition() - gpGlobals->v_up * 2;
-	Vector vecDir = gpGlobals->v_forward;
-
-	UTIL_TraceLine(vecSrc, vecSrc + vecDir * 8192, dont_ignore_monsters, m_pPlayer->edict(), &tr);
-
-#ifndef CLIENT_DLL
-	if (0 != tr.pHit->v.takedamage)
-	{
-		ClearMultiDamage();
-		CBaseEntity::Instance(tr.pHit)->TraceAttack(m_pPlayer->pev, 120, vecDir, &tr, DMG_BULLET | DMG_NEVERGIB);
-		ApplyMultiDamage(pev, m_pPlayer->pev);
-	}
-#endif
 }
 
 void CCrossbow::FireBolt()
@@ -390,6 +339,9 @@ void CCrossbow::FireBolt()
 	pBolt->pev->angles = anglesAim;
 	pBolt->pev->owner = m_pPlayer->edict();
 
+	m_pPlayer->m_pCam->SetPlayer((CBasePlayer*)pBolt);
+	m_pPlayer->m_pCam->SetOrigin(Vector(0,2,8));
+	
 	if (m_pPlayer->pev->waterlevel == 3)
 	{
 		pBolt->pev->velocity = vecDir * BOLT_WATER_VELOCITY;
@@ -402,10 +354,6 @@ void CCrossbow::FireBolt()
 	}
 	pBolt->pev->avelocity.z = 10;
 #endif
-
-	if (0 == m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
-		// HEV suit - indicate out of ammo condition
-		m_pPlayer->SetSuitUpdate("!HEV_AMO0", false, 0);
 
 	m_flNextPrimaryAttack = GetNextAttackDelay(0.75);
 

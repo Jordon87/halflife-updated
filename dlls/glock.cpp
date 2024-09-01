@@ -80,12 +80,20 @@ bool CGlock::Deploy()
 
 void CGlock::SecondaryAttack()
 {
-	GlockFire(0.1, 0.2, false);
+	if (m_iUnk_0x88 == 0)
+	{
+		GlockFire(0.1, 0.2, false);
+		m_iUnk_0x88 = 1;
+	}
 }
 
 void CGlock::PrimaryAttack()
 {
-	GlockFire(0.01, 0.3, true);
+	if (m_iUnk_0x88 == 0)
+	{
+		GlockFire(0.01, 0.3, true);
+		m_iUnk_0x88 = 1;
+	}
 }
 
 void CGlock::GlockFire(float flSpread, float flCycleTime, bool fUseAutoAim)
@@ -148,10 +156,6 @@ void CGlock::GlockFire(float flSpread, float flCycleTime, bool fUseAutoAim)
 
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = GetNextAttackDelay(flCycleTime);
 
-	if (0 == m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
-		// HEV suit - indicate out of ammo condition
-		m_pPlayer->SetSuitUpdate("!HEV_AMO0", false, 0);
-
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15);
 }
 
@@ -175,6 +179,8 @@ void CGlock::WeaponIdle()
 	ResetEmptySound();
 
 	m_pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
+
+	m_iUnk_0x88 = 0;
 
 	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
 		return;

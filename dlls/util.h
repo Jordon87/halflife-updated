@@ -291,6 +291,10 @@ extern bool UTIL_IsMasterTriggered(string_t sMaster, CBaseEntity* pActivator);
 extern void UTIL_BloodStream(const Vector& origin, const Vector& direction, int color, int amount);
 extern void UTIL_BloodDrips(const Vector& origin, const Vector& direction, int color, int amount);
 extern Vector UTIL_RandomBloodVector();
+extern void UTIL_Smoke(const Vector& a1, byte a2, byte a3, int a4);
+extern void UTIL_Explode(const Vector& a1, byte a2, byte a3);
+extern void UTIL_Muzzleflash(const Vector& a1, byte a2, byte a3, const Vector& a4, byte a5);
+extern void UTIL_BreakModel(const Vector& a1, const Vector& a2, const Vector& a3, byte a4, int a5, byte a6, byte a7, byte a8);
 extern bool UTIL_ShouldShowBlood(int bloodColor);
 extern void UTIL_BloodDecalTrace(TraceResult* pTrace, int bloodColor);
 extern void UTIL_DecalTrace(TraceResult* pTrace, int decalNumber);
@@ -549,6 +553,8 @@ void EMIT_GROUPNAME_SUIT(edict_t* entity, const char* groupname);
 
 inline int g_groupmask = 0;
 inline int g_groupop = 0;
+
+inline DLL_GLOBAL CBaseEntity* g_CrossbowBolt = nullptr;
 
 class UTIL_GroupTrace
 {

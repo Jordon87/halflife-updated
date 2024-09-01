@@ -52,13 +52,13 @@ Vector previousorigin;
 // HLDM Weapon placeholder entities.
 CGlock g_Glock;
 CCrowbar g_Crowbar;
+CPipe g_Pipe;
 CPython g_Python;
 CMP5 g_Mp5;
 CCrossbow g_Crossbow;
+CSniper g_Sniper;
 CShotgun g_Shotgun;
 CRpg g_Rpg;
-CGauss g_Gauss;
-CEgon g_Egon;
 CHgun g_HGun;
 CHandGrenade g_HandGren;
 CSatchel g_Satchel;
@@ -452,13 +452,13 @@ void HUD_InitClientWeapons()
 	// Allocate slot(s) for each weapon that we are going to be predicting
 	HUD_PrepEntity(&g_Glock, &player);
 	HUD_PrepEntity(&g_Crowbar, &player);
+	HUD_PrepEntity(&g_Pipe, &player);
 	HUD_PrepEntity(&g_Python, &player);
 	HUD_PrepEntity(&g_Mp5, &player);
 	HUD_PrepEntity(&g_Crossbow, &player);
+	HUD_PrepEntity(&g_Sniper, &player);
 	HUD_PrepEntity(&g_Shotgun, &player);
 	HUD_PrepEntity(&g_Rpg, &player);
-	HUD_PrepEntity(&g_Gauss, &player);
-	HUD_PrepEntity(&g_Egon, &player);
 	HUD_PrepEntity(&g_HGun, &player);
 	HUD_PrepEntity(&g_HandGren, &player);
 	HUD_PrepEntity(&g_Satchel, &player);
@@ -559,14 +559,6 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 		pWeapon = &g_Rpg;
 		break;
 
-	case WEAPON_GAUSS:
-		pWeapon = &g_Gauss;
-		break;
-
-	case WEAPON_EGON:
-		pWeapon = &g_Egon;
-		break;
-
 	case WEAPON_HORNETGUN:
 		pWeapon = &g_HGun;
 		break;
@@ -585,6 +577,14 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 
 	case WEAPON_SNARK:
 		pWeapon = &g_Snark;
+		break;
+		
+	case WEAPON_SNIPER:
+		pWeapon = &g_Sniper;
+		break;
+
+	case WEAPON_PIPE:
+		pWeapon = &g_Pipe;
 		break;
 	}
 

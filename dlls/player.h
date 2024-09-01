@@ -16,7 +16,8 @@
 #pragma once
 
 #include "pm_materials.h"
-
+#include "cinematic_camera.h"
+class CCinematicCamera;
 
 #define PLAYER_FATAL_FALL_SPEED 1024															  // approx 60 feet
 #define PLAYER_MAX_SAFE_FALL_SPEED 580															  // approx 20 feet
@@ -99,6 +100,8 @@ public:
 	int m_iObserverLastMode; // last used observer mode
 	bool IsObserver() { return 0 != pev->iuser1; }
 
+	float m_flEarRinging;
+	CCinematicCamera *m_pCam;
 	int random_seed; // See that is shared between client & server for shared weapons code
 
 	int m_iPlayerSound;		// the index of the sound list slot reserved for this player
@@ -145,9 +148,7 @@ public:
 	int m_lastDamageAmount;						 // Last damage taken
 	float m_tbdPrev;							 // Time-based damage timer
 
-	float m_flgeigerRange; // range to nearest radiation source
 	float m_flgeigerDelay; // delay per update of range msg to client
-	int m_igeigerRangePrev;
 	int m_iStepLeft;						// alternate left/right foot stepping sound
 	char m_szTextureName[CBTEXTURENAMEMAX]; // current texture name we're standing on
 	char m_chTextureType;					// current texture type
@@ -307,9 +308,6 @@ public:
 	void EXPORT PlayerDeathThink();
 	void PlayerUse();
 
-	void CheckSuitUpdate();
-	void SetSuitUpdate(const char* name, bool fgroup, int iNoRepeat);
-	void UpdateGeigerCounter();
 	void CheckTimeBasedDamage();
 
 	bool FBecomeProne() override;

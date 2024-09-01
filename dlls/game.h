@@ -18,6 +18,7 @@
 extern void GameDLLInit( void );
 void GameDLLShutdown();
 
+extern cvar_t	mp_cinematics;
 
 extern cvar_t	displaysoundlist;
 

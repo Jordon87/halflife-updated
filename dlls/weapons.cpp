@@ -268,11 +268,11 @@ void W_Precache()
 	// custom items...
 
 	// common world objects
-	UTIL_PrecacheOther("item_suit");
+	UTIL_PrecacheOther("item_bodyarmour");
 	UTIL_PrecacheOther("item_battery");
 	UTIL_PrecacheOther("item_antidote");
 	UTIL_PrecacheOther("item_security");
-	UTIL_PrecacheOther("item_longjump");
+	UTIL_PrecacheOther("item_flashlight");
 
 	// shotgun
 	UTIL_PrecacheOtherWeapon("weapon_shotgun");
@@ -280,6 +280,9 @@ void W_Precache()
 
 	// crowbar
 	UTIL_PrecacheOtherWeapon("weapon_crowbar");
+
+	// pipe
+	UTIL_PrecacheOtherWeapon("weapon_pipe");
 
 	// glock
 	UTIL_PrecacheOtherWeapon("weapon_9mmhandgun");
@@ -305,6 +308,9 @@ void W_Precache()
 	// crossbow
 	UTIL_PrecacheOtherWeapon("weapon_crossbow");
 	UTIL_PrecacheOther("ammo_crossbow");
+
+	// sniper
+	UTIL_PrecacheOtherWeapon("weapon_sniper");
 
 	// egon
 	UTIL_PrecacheOtherWeapon("weapon_egon");
@@ -335,6 +341,9 @@ void W_Precache()
 	g_sModelIndexBubbles = PRECACHE_MODEL("sprites/bubble.spr");		//bubbles
 	g_sModelIndexBloodSpray = PRECACHE_MODEL("sprites/bloodspray.spr"); // initial blood
 	g_sModelIndexBloodDrop = PRECACHE_MODEL("sprites/blood.spr");		// splattered blood
+	g_sModelIndexConcreteGib = PRECACHE_MODEL("models/concretegibs.mdl");
+	g_sModelIndexRockGib = PRECACHE_MODEL("models/rockgibs.mdl");
+	g_sModelIndexWoodGib = PRECACHE_MODEL("models/woodgibs.mdl");
 
 	g_sModelIndexLaser = PRECACHE_MODEL((char*)g_pModelNameLaser);
 	g_sModelIndexLaserDot = PRECACHE_MODEL("sprites/laserdot.spr");
@@ -356,6 +365,7 @@ void W_Precache()
 	PRECACHE_SOUND("weapons/bullet_hit2.wav"); // hit by bullet
 
 	PRECACHE_SOUND("items/weapondrop1.wav"); // weapon falls to the ground
+	PRECACHE_SOUND("player/ear_ringing.wav");
 }
 
 
