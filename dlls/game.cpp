@@ -19,6 +19,8 @@
 #include "game.h"
 #include "filesystem_utils.h"
 
+cvar_t mp_cinematics = {"mp_cinematics", "0"};
+
 cvar_t displaysoundlist = {"displaysoundlist", "0"};
 
 // multiplayer server rules

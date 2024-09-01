@@ -2762,9 +2762,6 @@ void CBasePlayer::Precache()
 	// init geiger counter vars during spawn and each time
 	// we cross a level transition
 
-	m_flgeigerRange = 1000;
-	m_igeigerRangePrev = 1000;
-
 	m_bitsDamageType = 0;
 	m_bitsHUDDamage = -1;
 

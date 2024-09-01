@@ -41,8 +41,6 @@ public:
 	float m_frictionFraction; // Sorry, couldn't resist this name :)
 };
 
-LINK_ENTITY_TO_CLASS(func_friction, CFrictionModifier);
-
 // This trigger will fire when the level spawns (or respawns if not fire once)
 // It will check a global state before firing.  It supports delay and killtargets
 

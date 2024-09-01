@@ -66,8 +66,7 @@ public:
 	void EXPORT CommandUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value);
 
 	bool TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType) override;
-	void TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType) override;
-	void ShowDamage();
+	void TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType) override;;
 	void Update();
 
 	CBaseEntity* m_pGoalEnt;
@@ -762,7 +761,6 @@ void COsprey::Update()
 	//Listen for sounds so AI triggers work.
 	Listen();
 
-	ShowDamage();
 	FCheckAITrigger();
 }
 

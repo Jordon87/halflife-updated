@@ -1259,7 +1259,7 @@ void CChangeLevel::ChangeLevelNow(CBaseEntity* pActivator)
 	pev->dmgtime = gpGlobals->time;
 
 
-	CBaseEntity* pPlayer = UTIL_GetLocalPlayer();
+	CBasePlayer* pPlayer = (CBasePlayer*)UTIL_GetLocalPlayer();
 	if (!InTransitionVolume(pPlayer, m_szLandmarkName))
 	{
 		ALERT(at_aiconsole, "Player isn't in the transition volume %s, aborting\n", m_szLandmarkName);
@@ -1297,6 +1297,7 @@ void CChangeLevel::ChangeLevelNow(CBaseEntity* pActivator)
 	ALERT( at_console, "Level touches %d levels\n", ChangeList( levels, 16 ) );
 	ALERT(at_console, "CHANGE LEVEL: From %s to %s through Spot %s\n", m_szMapName, st_szNextMap, st_szNextSpot);
 	CHANGE_LEVEL(st_szNextMap, st_szNextSpot);
+
 	UTIL_Remove(pPlayer->m_pCam);
 	pPlayer->m_pCam = NULL;
 }
