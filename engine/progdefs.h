@@ -49,6 +49,7 @@ typedef struct
 
 	void* pSaveData;
 	Vector vecLandmarkOffset;
+	bool allied;
 } globalvars_t;
 
 constexpr int NUM_ENT_CONTROLLERS = 4;

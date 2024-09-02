@@ -354,6 +354,7 @@ GLOBALESTATE CGlobalState::EntityGetState(string_t globalname)
 TYPEDESCRIPTION CGlobalState::m_SaveData[] =
 	{
 		DEFINE_FIELD(CGlobalState, m_listCount, FIELD_INTEGER),
+		DEFINE_FIELD(CGlobalState, allied, FIELD_BOOLEAN),
 };
 
 // Global Savedata for Delay
@@ -369,6 +370,8 @@ bool CGlobalState::Save(CSave& save)
 {
 	int i;
 	globalentity_t* pEntity;
+
+	allied = gpGlobals->allied;
 
 	if (!save.WriteFields("GLOBAL", this, m_SaveData, ARRAYSIZE(m_SaveData)))
 		return false;
@@ -404,6 +407,9 @@ bool CGlobalState::Restore(CRestore& restore)
 			return false;
 		EntityAdd(MAKE_STRING(tmpEntity.name), MAKE_STRING(tmpEntity.levelName), tmpEntity.state);
 	}
+	
+	gpGlobals->allied = allied;
+
 	return true;
 }
 

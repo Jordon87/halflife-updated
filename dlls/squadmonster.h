@@ -93,6 +93,7 @@ public:
 			return (CSquadMonster*)((CBaseEntity*)m_hSquadMember[i]);
 	}
 	bool InSquad() { return m_hSquadLeader != NULL; }
+	bool IsFollowing() { return m_hTargetEnt != NULL && m_hTargetEnt->IsPlayer(); }
 	bool IsLeader() { return m_hSquadLeader == this; }
 	int SquadJoin(int searchRadius);
 	int SquadRecruit(int searchRadius, int maxMembers);

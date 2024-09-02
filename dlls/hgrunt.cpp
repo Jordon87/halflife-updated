@@ -91,6 +91,10 @@ int g_fGruntQuestion; // true if an idle grunt asked a question. Cleared when so
 enum
 {
 	SCHED_GRUNT_SUPPRESS = LAST_COMMON_SCHEDULE + 1,
+	SCHED_GRUNT_CANT_FOLLOW,
+	SCHED_GRUNT_MOVE_AWAY, // Try to get out of the player's way
+	SCHED_GRUNT_MOVE_AWAY_FOLLOW, // same, but follow afterward
+	SCHED_GRUNT_MOVE_AWAY_FAIL,	// Turn back toward player
 	SCHED_GRUNT_ESTABLISH_LINE_OF_FIRE, // move to a location to set up an attack against the enemy. (usually when a friendly is in the way).
 	SCHED_GRUNT_COVER_AND_RELOAD,
 	SCHED_GRUNT_SWEEP,
@@ -109,8 +113,11 @@ enum
 enum
 {
 	TASK_GRUNT_FACE_TOSS_DIR = LAST_COMMON_TASK + 1,
+	TASK_GRUNT_MOVE_AWAY_PATH,
+	TASK_GRUNT_WALK_PATH_FOR_UNITS,
 	TASK_GRUNT_SPEAK_SENTENCE,
 	TASK_GRUNT_CHECK_FIRE,
+	TASK_GRUNT_CANT_FOLLOW,
 };
 
 //=========================================================
@@ -151,6 +158,13 @@ public:
 	CBaseEntity* Kick();
 	Schedule_t* GetSchedule() override;
 	Schedule_t* GetScheduleOfType(int Type) override;
+	
+	void StopFollowing(bool clearSchedule);
+	void UseSound(CBaseEntity* param_1);
+	bool CanFollow();
+	void EXPORT AllyUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value);
+	void EXPORT AllyTouch(CBaseEntity* pOther);
+
 	void TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType) override;
 	bool TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType) override;
 
@@ -1038,6 +1052,8 @@ void CHGrunt::Spawn()
 	CTalkMonster::g_talkWaitTime = 0;
 
 	MonsterInit();
+	SetUse(&CHGrunt::AllyUse);
+	SetTouch(&CHGrunt::AllyTouch);
 }
 
 //=========================================================
@@ -1111,6 +1127,36 @@ void CHGrunt::StartTask(Task_t* pTask)
 		m_IdealActivity = ACT_RELOAD;
 		break;
 
+	case TASK_GRUNT_MOVE_AWAY_PATH:
+	{
+		Vector dir = pev->angles;
+		dir.y = pev->ideal_yaw + 180;
+		Vector move;
+
+		UTIL_MakeVectorsPrivate(dir, move, NULL, NULL);
+		dir = pev->origin + move * pTask->flData;
+		if (MoveToLocation(ACT_WALK, 2, dir))
+		{
+			TaskComplete();
+		}
+		else if (FindCover(pev->origin, pev->view_ofs, 0, CoverRadius()))
+		{
+			// then try for plain ole cover
+			m_flMoveWaitFinished = gpGlobals->time + 2;
+			TaskComplete();
+		}
+		else
+		{
+			// nowhere to go?
+			TaskFail();
+		}
+	}
+	break;
+
+	case TASK_GRUNT_WALK_PATH_FOR_UNITS:
+		m_movementActivity = ACT_WALK;
+		break;
+
 	case TASK_GRUNT_FACE_TOSS_DIR:
 		break;
 
@@ -1121,6 +1167,11 @@ void CHGrunt::StartTask(Task_t* pTask)
 		{
 			m_IdealActivity = ACT_GLIDE;
 		}
+		break;
+
+	case TASK_GRUNT_CANT_FOLLOW:
+		StopFollowing(true);
+		TaskComplete();
 		break;
 
 	default:
@@ -1790,6 +1841,116 @@ Schedule_t slGruntRepelLand[] =
 			"Repel Land"},
 };
 
+//=========================================================
+// sweet half-life related
+//=========================================================
+Task_t tlGruntFollow[] =
+	{
+		{TASK_MOVE_TO_TARGET_RANGE, (float)128},
+		{TASK_SET_SCHEDULE, (float)SCHED_TARGET_FACE},
+};
+
+Schedule_t slGruntFollow[] =
+	{
+		{tlGruntFollow,
+			ARRAYSIZE(tlGruntFollow),
+			bits_COND_NEW_ENEMY |
+				bits_COND_LIGHT_DAMAGE |
+				bits_COND_HEAVY_DAMAGE |
+				bits_COND_HEAR_SOUND,
+			bits_SOUND_COMBAT |
+				bits_SOUND_DANGER,
+			"GruntFollow"},
+};
+
+Task_t tlGruntStopFollowing[] =
+	{
+		{TASK_GRUNT_CANT_FOLLOW, (float)0},
+};
+
+Schedule_t slGruntStopFollowing[] =
+	{
+		{tlGruntStopFollowing,
+			ARRAYSIZE(tlGruntStopFollowing),
+			0,
+			0,
+			"GruntStopFollowing"},
+};
+
+Task_t tlGruntFaceTarget[] =
+	{
+		{TASK_SET_ACTIVITY, (float)ACT_IDLE},
+		{TASK_FACE_TARGET, (float)0},
+		{TASK_SET_ACTIVITY, (float)ACT_IDLE},
+		{TASK_SET_SCHEDULE, (float)SCHED_TARGET_CHASE},
+};
+
+Schedule_t slGruntFaceTarget[] =
+	{
+		{tlGruntFaceTarget,
+			ARRAYSIZE(tlGruntFaceTarget),
+			bits_COND_CLIENT_UNSEEN |
+				bits_COND_NEW_ENEMY |
+				bits_COND_LIGHT_DAMAGE |
+				bits_COND_HEAVY_DAMAGE |
+				bits_COND_HEAR_SOUND |
+				bits_COND_PROVOKED,
+			bits_SOUND_DANGER,
+			"GruntFaceTarget"},
+};
+
+Task_t tlGruntMoveAway[] =
+	{
+		{TASK_SET_FAIL_SCHEDULE, (float)SCHED_MOVE_AWAY_FAIL},
+		{TASK_STORE_LASTPOSITION, (float)0},
+		{TASK_MOVE_AWAY_PATH, (float)100},
+		{TASK_WALK_PATH_FOR_UNITS, (float)100},
+		{TASK_STOP_MOVING, (float)0},
+		{TASK_FACE_PLAYER, (float)0.5},
+};
+
+Schedule_t slGruntMoveAway[] =
+	{
+		{tlGruntMoveAway,
+			ARRAYSIZE(tlGruntMoveAway),
+			0,
+			0,
+			"GruntMoveAway"},
+};
+
+Task_t tlGruntMoveAwayFail[] =
+	{
+		{TASK_STOP_MOVING, (float)0},
+		{TASK_FACE_PLAYER, (float)0.5},
+};
+
+Schedule_t slGruntMoveAwayFail[] =
+	{
+		{tlGruntMoveAwayFail,
+			ARRAYSIZE(tlGruntMoveAwayFail),
+			0,
+			0,
+			"GruntMoveAwayFail"},
+};
+
+Task_t tlGruntMoveAwayFollow[] =
+	{
+		{TASK_SET_FAIL_SCHEDULE, (float)SCHED_TARGET_FACE},
+		{TASK_GET_PATH_TO_BESTSOUND, (float)0},
+		{TASK_GRUNT_MOVE_AWAY_PATH, (float)100},
+		{TASK_GRUNT_WALK_PATH_FOR_UNITS, (float)100},
+		{TASK_STOP_MOVING, (float)0},
+		{TASK_SET_SCHEDULE, (float)SCHED_TARGET_FACE},
+};
+
+Schedule_t slGruntMoveAwayFollow[] =
+	{
+		{tlGruntMoveAwayFollow,
+			ARRAYSIZE(tlGruntMoveAwayFollow),
+			0,
+			0,
+			"GruntMoveAwayFollow"},
+};
 
 DEFINE_CUSTOM_SCHEDULES(CHGrunt){
 	slGruntFail,
@@ -1813,6 +1974,12 @@ DEFINE_CUSTOM_SCHEDULES(CHGrunt){
 	slGruntRepel,
 	slGruntRepelAttack,
 	slGruntRepelLand,
+	slGruntFollow,
+	slGruntStopFollowing,
+	slGruntFaceTarget,
+	slGruntMoveAway,
+	slGruntMoveAwayFail,
+	slGruntMoveAwayFollow,
 };
 
 IMPLEMENT_CUSTOM_SCHEDULES(CHGrunt, CSquadMonster);
@@ -2168,10 +2335,24 @@ Schedule_t* CHGrunt::GetSchedule()
 		{
 			return GetScheduleOfType(SCHED_GRUNT_ESTABLISH_LINE_OF_FIRE);
 		}
+
+		if (m_hEnemy == NULL && IsFollowing())
+		{
+			if (!m_hTargetEnt->IsAlive())
+			{
+				if (HasConditions(bits_COND_CLIENT_PUSH ))
+				{
+					return GetScheduleOfType(SCHED_GRUNT_MOVE_AWAY_FOLLOW);
+				}
+				return GetScheduleOfType(SCHED_TARGET_FACE);
+			}
+			StopFollowing(false);
+			break;
+		}
+
 	}
 	}
 
-	// no special cases here, call the base class
 	return CSquadMonster::GetSchedule();
 }
 
@@ -2321,10 +2502,118 @@ Schedule_t* CHGrunt::GetScheduleOfType(int Type)
 	{
 		return &slGruntRepelLand[0];
 	}
+	case SCHED_TARGET_FACE:
+	{
+		return slGruntFaceTarget;
+	}
+	case SCHED_TARGET_CHASE:
+	{
+		return slGruntFollow;
+	}
+	case SCHED_GRUNT_CANT_FOLLOW:
+	{
+		return slGruntStopFollowing;
+	}
+	case SCHED_GRUNT_MOVE_AWAY:
+	{
+		return slGruntMoveAway;
+	}
+	case SCHED_GRUNT_MOVE_AWAY_FOLLOW:
+	{
+		return slGruntMoveAwayFollow;
+	}
+	case SCHED_GRUNT_MOVE_AWAY_FAIL:
+	{
+		return slGruntMoveAwayFail;
+	}
 	default:
 	{
 		return CSquadMonster::GetScheduleOfType(Type);
 	}
+	}
+}
+
+void CHGrunt::StopFollowing(bool clearSchedule)
+{
+	if (IsFollowing())
+	{
+		SENTENCEG_PlayRndSz(ENT(pev), "HG_USEOFF", 0.7f, GRUNT_ATTN, 0, m_voicePitch);
+		JustSpoke();
+
+		if (m_movementGoal == MOVEGOAL_TARGETENT)
+			RouteClear(); // Stop him from walking toward the player
+		m_hTargetEnt = NULL;
+		if (clearSchedule)
+			ClearSchedule();
+		if (m_hEnemy != NULL)
+			m_IdealMonsterState = MONSTERSTATE_COMBAT;
+	}
+}
+
+void CHGrunt::UseSound(CBaseEntity* param_1)
+{
+	SENTENCEG_PlayRndSz(ENT(pev), "HG_USEON", 0.7f, GRUNT_ATTN, 0, m_voicePitch);
+	JustSpoke();
+
+	if (m_hEnemy != NULL)
+		m_IdealMonsterState = MONSTERSTATE_ALERT;
+
+	ClearConditions(bits_COND_CLIENT_UNSEEN);
+	ClearSchedule();
+}
+
+bool CHGrunt::CanFollow()
+{
+	if (m_MonsterState == MONSTERSTATE_SCRIPT)
+	{
+		return false;
+	}
+
+	if (!IsAlive())
+		return false;
+
+	return !IsFollowing();
+}
+
+void CHGrunt::AllyUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
+{
+	if (!gpGlobals->allied)
+		return;
+
+	if (pCaller != NULL && pCaller->IsPlayer())
+	{
+		// Pre-disaster followers can't be used
+		if ((pev->spawnflags & SF_MONSTER_PREDISASTER) != 0)
+		{
+			StopFollowing(true);
+		}
+		else if (CanFollow())
+		{
+			UseSound(pCaller);
+		}
+	}
+}
+
+void CHGrunt::AllyTouch(CBaseEntity* pOther)
+{
+	// Did the player touch me?
+	if (pOther->IsPlayer())
+	{
+		// Ignore if pissed at player
+		if (gpGlobals->allied)
+			return;
+
+		// Heuristic for determining if the player is pushing me away
+		float speed = fabs(pOther->pev->velocity.x) + fabs(pOther->pev->velocity.y);
+		if (speed > 50)
+		{
+			// From https://github.com/FreeSlave/halflife-updated/wiki/Fix-potential-incorrect-facing-in-scripted-sequence
+			if (m_pSchedule != NULL && (m_pSchedule->iInterruptMask & bits_COND_CLIENT_PUSH) != 0)
+			{
+				SetConditions(bits_COND_CLIENT_PUSH);
+				MakeIdealYaw(pOther->pev->origin);
+			}
+		}
 	}
 }
 
