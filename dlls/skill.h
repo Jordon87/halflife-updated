@@ -79,6 +79,7 @@ struct skilldata_t
 	float nihilanthZap;
 
 	float scientistHealth;
+	float HEVscientistHealth;
 
 	float snarkHealth;
 	float snarkDmgBite;
