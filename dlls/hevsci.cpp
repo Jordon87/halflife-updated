@@ -432,25 +432,99 @@ void CHEVSci::Gauss()
 {
 	if (FUN_1004c8d9(true) != 0)
 	{
+		Vector vecOrigin, vecAngles;
 		UTIL_MakeVectors(pev->angles);
 
-		Vector vecGaussVelocity = Vector(RANDOM_FLOAT(-0.05, 0.05), RANDOM_FLOAT(-0.05, 0.05), RANDOM_FLOAT(-0.05, 0.05));
+		GetAttachment(3, vecOrigin, vecAngles);
 
-		Vector vecShootOrigin = GetGunPosition();
-		Vector vecShootDir = ShootAtEnemy(vecShootOrigin);
+		Vector gaussVelocity = Vector(RANDOM_FLOAT(-0.05, 0.05), RANDOM_FLOAT(-0.05, 0.05), RANDOM_FLOAT(-0.05, 0.05));
+	
+		Vector originDir = ShootAtEnemy(vecOrigin);
 
-		Vector angDir = UTIL_VecToAngles(vecShootDir);
+		originDir + gaussVelocity;
+
+		Vector vecDest = vecOrigin + vecAngles * 8192;
+
+		TraceResult tr;
+
+		UTIL_MakeVectors(pev->angles);
+
+		Vector angDir = UTIL_VecToAngles(vecAngles);
 		SetBlending(0, angDir.x);
 
-		GetAttachment(3, vecShootOrigin, angDir);
+		pev->effects = EF_MUZZLEFLASH;
 
-		EjectBrass(vecShootOrigin - vecShootDir * 24, vecShellVelocity, pev->angles.y, m_nShotgunShell, TE_BOUNCE_SHOTSHELL);
-		FireBullets(gSkillData.hgruntShotgunPellets, vecShootOrigin, vecShootDir, VECTOR_CONE_15DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0); // shoot +-7.5 degrees
+		edict_t* pentIgnore = edict();
+
+		UTIL_TraceLine(vecOrigin, vecDest, dont_ignore_monsters, pentIgnore, &tr);
+	
+		CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
+
+		if (pEntity || pev->takedamage == 0.0f)
+		{
+			MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos);
+			WRITE_COORD(tr.vecEndPos.x);
+			WRITE_COORD(tr.vecEndPos.y);
+			WRITE_COORD(tr.vecEndPos.z);
+			WRITE_SHORT(m_nHotGlow);
+			WRITE_BYTE(TE_BEAMDISK);
+			WRITE_BYTE(TE_EXPLOSION);
+			WRITE_BYTE(200);
+			MESSAGE_END();
+
+			MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, tr.vecEndPos);
+			WRITE_BYTE(TE_SPRITETRAIL);
+			WRITE_COORD(tr.vecEndPos.x);
+			WRITE_COORD(tr.vecEndPos.y);
+			WRITE_COORD(tr.vecEndPos.z);
+			WRITE_COORD(tr.vecEndPos.x + tr.vecPlaneNormal.x);
+			WRITE_COORD(tr.vecEndPos.y + tr.vecPlaneNormal.y);
+			WRITE_COORD(tr.vecEndPos.z + tr.vecPlaneNormal.z);
+			WRITE_SHORT(m_nHotGlow);
+			WRITE_BYTE(TE_BEAMENTS);
+			WRITE_BYTE(TE_TRACER);
+			WRITE_BYTE(RANDOM_LONG(1,2));
+			WRITE_BYTE(TE_LAVASPLASH);
+			WRITE_BYTE(TE_BEAMDISK);
+			MESSAGE_END();
+		}
+		else
+		{
+			ClearMultiDamage();
+			pEntity->TraceAttack(pev, gSkillData.plrDmgGauss, vecOrigin, &tr, DMG_BULLET);
+			ApplyMultiDamage(pev, pev);
+		}
 
 		FUN_1004c919(true);
 
-		EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/sbarrel1.wav", 1, ATTN_NORM, 0, 100);
+		MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos);
+		WRITE_BYTE(TE_BEAMENTPOINT);
+		WRITE_SHORT(entindex() + 4096);
+		WRITE_COORD(tr.vecEndPos.x);
+		WRITE_COORD(tr.vecEndPos.y);
+		WRITE_COORD(tr.vecEndPos.z);
+		WRITE_SHORT(m_nSmoke);
+		WRITE_BYTE(TE_BEAMPOINTS);
+		WRITE_BYTE(TE_BEAMPOINTS);
+		WRITE_BYTE(TE_BEAMENTPOINT);
+		WRITE_BYTE(TE_LAVASPLASH);
+		WRITE_BYTE(TE_BEAMPOINTS);
+		WRITE_BYTE(255);
+		WRITE_BYTE(128);
+		WRITE_BYTE(TE_BEAMPOINTS);
+		WRITE_BYTE(128);
+		WRITE_BYTE(TE_BEAMPOINTS);
+		MESSAGE_END();
 
+		int pitchShift = RANDOM_LONG(0, 20);
+
+		// Only shift about half the time
+		if (pitchShift > 10)
+			pitchShift = 0;
+		else
+			pitchShift -= 5;
+
+		EMIT_SOUND_DYN(ENT(pev), 1, "weapons/gauss2.wav", VOL_NORM, ATTN_NORM, 0, pitchShift);
 		CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, 384, 0.3);
 	}
 }
