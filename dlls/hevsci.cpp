@@ -65,7 +65,6 @@ public:
 	void Precache() override;
 	void SetYawSpeed() override;
 	int ISoundMask() override;
-	void BarneyFirePistol();
 	void AlertSound() override;
 	int Classify() override;
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
@@ -80,6 +79,8 @@ public:
 	void FUN_1004c919(bool a1);
 	void Shotgun();
 	void Gauss();
+	void MP5();
+	void Reload();
 
 	void Touch(CBaseEntity* pOther) override;
 	void DeclineFollowing() override;
@@ -406,19 +407,19 @@ void CHEVSci::Shotgun()
 {
 	if (FUN_1004c8d9(true) != 0)
 	{
+		Vector vecOrigin, vecAngles;
 		UTIL_MakeVectors(pev->angles);
 
-		Vector vecShootOrigin = GetGunPosition();
-		Vector vecShootDir = ShootAtEnemy(vecShootOrigin);
+		GetAttachment(3, vecOrigin, vecAngles);
+
+		Vector vecShootDir = ShootAtEnemy(vecOrigin);
 
 		Vector angDir = UTIL_VecToAngles(vecShootDir);
 		SetBlending(0, angDir.x);
 
-		GetAttachment(3, vecShootOrigin, angDir);
-
 		Vector vecShellVelocity = gpGlobals->v_right * RANDOM_FLOAT(40, 90) + gpGlobals->v_up * RANDOM_FLOAT(75, 200) + gpGlobals->v_forward * RANDOM_FLOAT(-40, 40);
-		EjectBrass(vecShootOrigin - vecShootDir * 24, vecShellVelocity, pev->angles.y, m_nShotgunShell, TE_BOUNCE_SHOTSHELL);
-		FireBullets(gSkillData.hgruntShotgunPellets, vecShootOrigin, vecShootDir, VECTOR_CONE_15DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0); // shoot +-7.5 degrees
+		EjectBrass(vecOrigin  - vecAngles * 24, vecShellVelocity, pev->angles.y, m_nShotgunShell, TE_BOUNCE_SHOTSHELL);
+		FireBullets(gSkillData.hgruntShotgunPellets, vecOrigin, vecShootDir, VECTOR_CONE_15DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0); // shoot +-7.5 degrees
 
 		FUN_1004c919(true);
 
@@ -437,11 +438,9 @@ void CHEVSci::Gauss()
 
 		GetAttachment(3, vecOrigin, vecAngles);
 
-		Vector gaussVelocity = Vector(RANDOM_FLOAT(-0.05, 0.05), RANDOM_FLOAT(-0.05, 0.05), RANDOM_FLOAT(-0.05, 0.05));
-	
 		Vector originDir = ShootAtEnemy(vecOrigin);
 
-		originDir + gaussVelocity;
+		originDir + Vector(RANDOM_FLOAT(-0.05, 0.05), RANDOM_FLOAT(-0.05, 0.05), RANDOM_FLOAT(-0.05, 0.05));
 
 		Vector vecDest = vecOrigin + vecAngles * 8192;
 
@@ -524,42 +523,61 @@ void CHEVSci::Gauss()
 		else
 			pitchShift -= 5;
 
-		EMIT_SOUND_DYN(ENT(pev), 1, "weapons/gauss2.wav", VOL_NORM, ATTN_NORM, 0, pitchShift);
+		EMIT_SOUND_DYN(ENT(pev), 1, "weapons/gauss2.wav", VOL_NORM, ATTN_NORM, 0, RANDOM_LONG(0, 31) + 85);
 		CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, 384, 0.3);
 	}
 }
 
-//=========================================================
-// BarneyFirePistol - shoots one round from the pistol at
-// the enemy barney is facing.
-//=========================================================
-void CHEVSci::BarneyFirePistol()
+void CHEVSci::MP5()
 {
-	Vector vecShootOrigin;
+	if (FUN_1004c8d9(true) != 0)
+	{
+		Vector vecOrigin, vecAngles;
+		UTIL_MakeVectors(pev->angles);
 
-	UTIL_MakeVectors(pev->angles);
-	vecShootOrigin = pev->origin + Vector(0, 0, 55);
-	Vector vecShootDir = ShootAtEnemy(vecShootOrigin);
+		GetAttachment(3, vecOrigin, vecAngles);
 
-	Vector angDir = UTIL_VecToAngles(vecShootDir);
-	SetBlending(0, angDir.x);
-	pev->effects = EF_MUZZLEFLASH;
+		Vector vecShootDir = ShootAtEnemy(vecOrigin);
 
-	FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_2DEGREES, 1024, BULLET_MONSTER_9MM);
+		Vector angDir = UTIL_VecToAngles(vecAngles);
+		SetBlending(0, angDir.x);
 
-	int pitchShift = RANDOM_LONG(0, 20);
+		pev->effects = EF_MUZZLEFLASH;
 
-	// Only shift about half the time
-	if (pitchShift > 10)
-		pitchShift = 0;
-	else
+		Vector vecShellVelocity = gpGlobals->v_right * RANDOM_FLOAT(40, 90) + gpGlobals->v_up * RANDOM_FLOAT(75, 200) + gpGlobals->v_forward * RANDOM_FLOAT(-40, 40);
+		EjectBrass(vecOrigin - vecAngles * 24, vecShellVelocity, pev->angles.y, m_nShell, TE_BOUNCE_SHELL);
+		FireBullets(1, vecOrigin, vecShootDir, VECTOR_CONE_10DEGREES, 2048, BULLET_MONSTER_MP5);
+	
+		FUN_1004c919(true);
+
+		int pitchShift = RANDOM_LONG(0, 10);
+
 		pitchShift -= 5;
-	EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "barney/ba_attack2.wav", 1, ATTN_NORM, 0, 100 + pitchShift);
 
-	CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, 384, 0.3);
+		int hasShot = RANDOM_LONG(0, 2);
 
-	// UNDONE: Reload?
-	m_cAmmoLoaded--; // take away a bullet!
+		if (hasShot == 0)
+		{
+			EMIT_SOUND_DYN(ENT(pev), 1, "weapons/hks1.wav", VOL_NORM, ATTN_NORM, 0, pitchShift + 100);
+		}
+		else if (hasShot == 1)
+		{
+			EMIT_SOUND_DYN(ENT(pev), 1, "weapons/hks2.wav", VOL_NORM, ATTN_NORM, 0, pitchShift + 100);
+		}
+		else
+		{
+			EMIT_SOUND_DYN(ENT(pev), 1, "weapons/hks3.wav", VOL_NORM, ATTN_NORM, 0, pitchShift + 100);
+		}
+		CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, 384, 0.3);
+	}
+}
+
+void CHEVSci::Reload()
+{
+	if (m_cClipsize != true)
+	{
+		m_cAmmoLoaded = m_cClipsize;
+	}
 }
 
 //=========================================================
@@ -580,6 +598,14 @@ void CHEVSci::HandleAnimEvent(MonsterEvent_t* pEvent)
 
 	case 2:
 		Gauss();
+		break;
+
+	case 3:
+		MP5();
+		break;
+
+	case 6:
+		Reload();
 		break;
 
 	case 7:
@@ -783,7 +809,8 @@ void CHEVSci::TalkInit()
 		m_voicePitch = 125;
 		break;
 	default:
-		m_voicePitch = 90; 
+		m_voicePitch = 90;
+		break;
 	}
 }
 
@@ -874,13 +901,13 @@ void CHEVSci::DeathSound()
 	switch (RANDOM_LONG(0, 2))
 	{
 	case 0:
-		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "barney/ba_die1.wav", 1, ATTN_NORM, 0, GetVoicePitch());
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "scientist/scream21.wav", 1, ATTN_NORM, 0, GetVoicePitch());
 		break;
 	case 1:
-		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "barney/ba_die2.wav", 1, ATTN_NORM, 0, GetVoicePitch());
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "scientist/sci_pain7.wav", 1, ATTN_NORM, 0, GetVoicePitch());
 		break;
 	case 2:
-		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "barney/ba_die3.wav", 1, ATTN_NORM, 0, GetVoicePitch());
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "scientist/sci_dragoff.wav", 1, ATTN_NORM, 0, GetVoicePitch());
 		break;
 	}
 }
