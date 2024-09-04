@@ -1118,6 +1118,10 @@ void CHEVSci::SetActivity(Activity NewActivity)
 	
 		if (m_isDucking)
 		{
+			iSequence = LookupSequence("crouch_aim_gauss");
+		}
+		else
+		{
 			if ((pev->weapons & 1) != 0)
 			{
 				iSequence = LookupSequence("look_idle");
@@ -1142,9 +1146,9 @@ void CHEVSci::SetActivity(Activity NewActivity)
 			{
 				iSequence = LookupSequence("ref_aim_python");
 			}
-	
+
 			int idleRNG = RANDOM_LONG(0, 3);
-	
+
 			if (idleRNG == 0)
 			{
 				iSequence = LookupSequence("look_idle");
@@ -1154,15 +1158,11 @@ void CHEVSci::SetActivity(Activity NewActivity)
 				iSequence = LookupSequence("deep_idle");
 			}
 		}
-		else
-		{
-			iSequence = LookupSequence("crouch_aim_gauss");
-		}
 		break;
 	
 	case ACT_WALK:
 	case ACT_RUN:
-		if (m_isDucking)
+		if (!m_isDucking)
 		{
 			iSequence = LookupActivity(NewActivity);
 		}
@@ -1177,12 +1177,12 @@ void CHEVSci::SetActivity(Activity NewActivity)
 		{
 			if (m_canDuckAttack)
 			{
-				iSequence = LookupSequence("ref_shoot_shotgun");
+				iSequence = LookupSequence("crouch_shoot_shotgun");
+				m_isDucking = true;
 			}
 			else
 			{
-				iSequence = LookupSequence("crouch_shoot_shotgun");
-				m_isDucking = true;
+				iSequence = LookupSequence("ref_shoot_shotgun");
 			}
 		}
 	
@@ -1190,12 +1190,12 @@ void CHEVSci::SetActivity(Activity NewActivity)
 		{
 			if (m_canDuckAttack)
 			{
-				iSequence = LookupSequence("ref_shoot_gauss");
+				iSequence = LookupSequence("crouch_shoot_gauss");
+				m_isDucking = true;
 			}
 			else
 			{
-				iSequence = LookupSequence("crouch_shoot_gauss");
-				m_isDucking = true;
+				iSequence = LookupSequence("ref_shoot_gauss");
 			}
 		}
 	
@@ -1203,12 +1203,12 @@ void CHEVSci::SetActivity(Activity NewActivity)
 		{
 			if (m_canDuckAttack)
 			{
-				iSequence = LookupSequence("ref_shoot_MP5");
+				iSequence = LookupSequence("crouch_shoot_MP5");
+				m_isDucking = true;
 			}
 			else
 			{
-				iSequence = LookupSequence("crouch_shoot_MP5");
-				m_isDucking = true;
+				iSequence = LookupSequence("ref_shoot_MP5");
 			}
 		}
 	
@@ -1216,12 +1216,12 @@ void CHEVSci::SetActivity(Activity NewActivity)
 		{
 			if (m_canDuckAttack)
 			{
-				iSequence = LookupSequence("ref_shoot_RPG");
+				iSequence = LookupSequence("crouch_shoot_RPG");
+				m_isDucking = true;
 			}
 			else
 			{
-				iSequence = LookupSequence("crouch_shoot_RPG");
-				m_isDucking = true;
+				iSequence = LookupSequence("ref_shoot_RPG");
 			}
 		}
 	
@@ -1231,12 +1231,12 @@ void CHEVSci::SetActivity(Activity NewActivity)
 	
 			if (m_canDuckAttack)
 			{
-				iSequence = LookupSequence("ref_shoot_python");
+				iSequence = LookupSequence("crouch_shoot_python");
+				m_isDucking = true;
 			}
 			else
 			{
-				iSequence = LookupSequence("crouch_shoot_python");
-				m_isDucking = true;
+				iSequence = LookupSequence("ref_shoot_python");
 			}
 		}
 		break;
@@ -1249,31 +1249,41 @@ void CHEVSci::SetActivity(Activity NewActivity)
 
 	if (m_isDucking)
 	{
-		UTIL_SetSize(pev, Vector(-16.0, -16.0, 0.0), Vector(16.0, 16.0, 72.0));
+		UTIL_SetSize(pev, Vector(-16.0, -16.0, 0.0), Vector(16.0, 16.0, 36.0));
 	}
 	else
 	{
-		UTIL_SetSize(pev, Vector(-16.0, -16.0, 0.0), Vector(16.0, 16.0, 36.0));
+		UTIL_SetSize(pev, Vector(-16.0, -16.0, 0.0), Vector(16.0, 16.0, 72.0));
 	}
 
-	if (NewActivity == ACT_RANGE_ATTACK1 || NewActivity == ACT_RELOAD || NewActivity == ACT_DIESIMPLE || NewActivity == ACT_DIEBACKWARD || NewActivity == ACT_DIEFORWARD || NewActivity == ACT_DIEVIOLENT || !m_isDucking)
+	if (NewActivity == ACT_RANGE_ATTACK1
+		|| NewActivity == ACT_RELOAD
+		|| NewActivity == ACT_DIESIMPLE
+		|| NewActivity == ACT_DIEBACKWARD
+		|| NewActivity == ACT_DIEFORWARD
+		|| NewActivity == ACT_DIEVIOLENT
+		|| !m_isDucking)
 	{
 		m_Activity = NewActivity;
 	}
 
-	if (iSequence <= -1)
+	// Set to the desired anim, or default anim if the desired is not present
+	if (iSequence > ACTIVITY_NOT_AVAILABLE)
 	{
-		ALERT(at_console, "%s has no sequence for act:%d\n", gpGlobals->pStringBase[this->pev->classname], iSequence);
-		pev->sequence = 0;
+		if (pev->sequence != iSequence || !m_fSequenceLoops)
+		{
+			pev->frame = 0;
+		}
+
+		pev->sequence = iSequence; // Set to the reset anim (if it's there)
+		ResetSequenceInfo();
+		SetYawSpeed();
 	}
 	else
 	{
-		if (pev->sequence != iSequence || !m_fSequenceLoops)
-			pev->frame = 0.0f;
-
-		pev->sequence = iSequence;
-		ResetSequenceInfo();
-		SetYawSpeed();
+		// Not available try to get default anim
+		ALERT(at_console, "%s has no sequence for act:%d\n", STRING(pev->classname), NewActivity);
+		pev->sequence = 0; // Set to the reset anim (if it's there)
 	}
 }
 
