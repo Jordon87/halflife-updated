@@ -72,8 +72,8 @@ public:
 	bool TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType) override;
 	bool CheckRangeAttack1(float flDot, float flDist) override;
 
-	int FUN_1004c8d9(bool a1);
-	void FUN_1004c919(bool a1);
+	int FUN_1004c8d9(byte a1);
+	void FUN_1004c919(byte a1);
 	void Reload();
 	void Shotgun();
 	void Gauss();
@@ -107,7 +107,7 @@ public:
 	float m_painTime;
 	float m_checkAttackTime;
 	bool m_lastAttackCheck;
-	bool m_cClipsize;
+	byte m_cClipsize;
 	bool m_isDucking;
 	bool m_canDuckAttack;
 
@@ -132,7 +132,7 @@ TYPEDESCRIPTION CHEVSci::m_SaveData[] =
 		DEFINE_FIELD(CHEVSci, m_checkAttackTime, FIELD_TIME),
 		DEFINE_FIELD(CHEVSci, m_lastAttackCheck, FIELD_BOOLEAN),
 		DEFINE_FIELD(CHEVSci, m_flPlayerDamage, FIELD_FLOAT),
-		DEFINE_FIELD(CHEVSci, m_cClipsize, FIELD_BOOLEAN),
+		DEFINE_FIELD(CHEVSci, m_cClipsize, FIELD_CHARACTER),
 		DEFINE_FIELD(CHEVSci, m_isDucking, FIELD_BOOLEAN),
 		DEFINE_FIELD(CHEVSci, m_canDuckAttack, FIELD_BOOLEAN),
 };
@@ -427,11 +427,11 @@ bool CHEVSci::CheckRangeAttack1(float flDot, float flDist)
 	return false;
 }
 
-int CHEVSci::FUN_1004c8d9(bool a1)
+int CHEVSci::FUN_1004c8d9(byte a1)
 {
 	int a2;
 
-	if (m_cClipsize == true || a1 <= m_cAmmoLoaded)
+	if (m_cClipsize == -1 || a1 <= m_cAmmoLoaded)
 	{
 		a2 = 1;
 	}
@@ -443,9 +443,9 @@ int CHEVSci::FUN_1004c8d9(bool a1)
 	return a2;
 }
 
-void CHEVSci::FUN_1004c919(bool a1)
+void CHEVSci::FUN_1004c919(byte a1)
 {
-	if (m_cClipsize != true)
+	if (m_cClipsize != -1)
 	{
 		m_cAmmoLoaded = m_cAmmoLoaded - a1;
 	}
@@ -453,7 +453,7 @@ void CHEVSci::FUN_1004c919(bool a1)
 
 void CHEVSci::Reload()
 {
-	if (m_cClipsize != true)
+	if (m_cClipsize != 1)
 	{
 		m_cAmmoLoaded = m_cClipsize;
 	}
@@ -461,7 +461,7 @@ void CHEVSci::Reload()
 
 void CHEVSci::Shotgun()
 {
-	if (FUN_1004c8d9(true) != 0)
+	if (FUN_1004c8d9(1) != 0)
 	{
 		Vector vecOrigin, vecAngles;
 		UTIL_MakeVectors(pev->angles);
@@ -477,7 +477,7 @@ void CHEVSci::Shotgun()
 		EjectBrass(vecOrigin  - vecAngles * 24, vecShellVelocity, pev->angles.y, m_nShotgunShell, TE_BOUNCE_SHOTSHELL);
 		FireBullets(gSkillData.hgruntShotgunPellets, vecOrigin, vecShootDir, VECTOR_CONE_15DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0); // shoot +-7.5 degrees
 
-		FUN_1004c919(true);
+		FUN_1004c919(1);
 
 		EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/sbarrel1.wav", 1, ATTN_NORM, 0, 100);
 
@@ -487,7 +487,7 @@ void CHEVSci::Shotgun()
 
 void CHEVSci::Gauss()
 {
-	if (FUN_1004c8d9(true) != 0)
+	if (FUN_1004c8d9(1) != 0)
 	{
 		Vector vecOrigin, vecAngles;
 		UTIL_MakeVectors(pev->angles);
@@ -550,7 +550,7 @@ void CHEVSci::Gauss()
 			ApplyMultiDamage(pev, pev);
 		}
 
-		FUN_1004c919(true);
+		FUN_1004c919(1);
 
 		MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos);
 		WRITE_BYTE(TE_BEAMENTPOINT);
@@ -586,7 +586,7 @@ void CHEVSci::Gauss()
 
 void CHEVSci::MP5()
 {
-	if (FUN_1004c8d9(true) != 0)
+	if (FUN_1004c8d9(1) != 0)
 	{
 		Vector vecOrigin, vecAngles;
 		UTIL_MakeVectors(pev->angles);
@@ -604,7 +604,7 @@ void CHEVSci::MP5()
 		EjectBrass(vecOrigin - vecAngles * 24, vecShellVelocity, pev->angles.y, m_nShell, TE_BOUNCE_SHELL);
 		FireBullets(1, vecOrigin, vecShootDir, VECTOR_CONE_10DEGREES, 2048, BULLET_MONSTER_MP5);
 	
-		FUN_1004c919(true);
+		FUN_1004c919(1);
 
 		int pitchShift = RANDOM_LONG(0, 10);
 
@@ -630,7 +630,7 @@ void CHEVSci::MP5()
 
 void CHEVSci::RPG()
 {
-	if (FUN_1004c8d9(true) != 0)
+	if (FUN_1004c8d9(1) != 0)
 	{
 		Vector vecOrigin, vecAngles;
 		UTIL_MakeVectors(pev->angles);
@@ -660,7 +660,7 @@ void CHEVSci::RPG()
 
 			CBaseEntity* pRocket = CBaseEntity::Create("rpg_rocket", vecOrigin, angDir, edict());
 		
-			FUN_1004c919(true);
+			FUN_1004c919(1);
 
 			EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/rocketfire1.wav", 0.9f, ATTN_NORM);
 			EMIT_SOUND(ENT(pev), CHAN_ITEM, "weapons/glauncher.wav", 0.7f, ATTN_NORM);
@@ -672,7 +672,7 @@ void CHEVSci::RPG()
 
 void CHEVSci::Python()
 {
-	if (FUN_1004c8d9(true) != 0)
+	if (FUN_1004c8d9(1) != 0)
 	{
 		Vector vecOrigin, vecAngles;
 		UTIL_MakeVectors(pev->angles);
@@ -690,7 +690,7 @@ void CHEVSci::Python()
 		EjectBrass(vecOrigin - vecAngles * 24, vecShellVelocity, pev->angles.y, m_nShell, TE_BOUNCE_SHELL);
 		FireBullets(1, vecOrigin, vecShootDir, VECTOR_CONE_5DEGREES, 4096, BULLET_PLAYER_357);
 
-		FUN_1004c919(true);
+		FUN_1004c919(1);
 
 		int hasShot = RANDOM_LONG(0, 1);
 
@@ -825,36 +825,36 @@ void CHEVSci::Spawn()
 	switch (this->pev->weapons)
 	{
 	case 1:
-		m_cClipsize = true;
+		m_cClipsize = -1;
 		break;
 	
 	case 2:
-		m_cClipsize = true;
+		m_cClipsize = 8;
 		m_cAmmoLoaded = 8;
 		SetBodygroup(2, 1);
 		break;
 	
 	case 4:
-		m_cClipsize = true;
+		m_cClipsize = -1;
 		m_cAmmoLoaded = 1;
 		SetBodygroup(2, 2);
 		break;
 	
 	case 8:
-		m_cClipsize = true;
+		m_cClipsize = 36;
 		m_cAmmoLoaded = 36;
 		SetBodygroup(2, 3);
 		break;
 	
 	case 16:
-		m_cClipsize = true;
+		m_cClipsize = 1;
 		m_cAmmoLoaded = 1;
 		SetBodygroup(2, 4);
 		break;
 	
 	case 32:
-		m_cClipsize = true;
-		m_cAmmoLoaded = 1;
+		m_cClipsize = 6;
+		m_cAmmoLoaded = 6;
 		SetBodygroup(2, 5);
 		break;
 	}
@@ -1429,7 +1429,7 @@ Schedule_t* CHEVSci::GetSchedule()
 		PlaySentence("SC_KILL", 4, VOL_NORM, ATTN_NORM);
 	}
 
-	if (FUN_1004c8d9(true) == 0)
+	if (FUN_1004c8d9(1) == 0)
 	{
 		return GetScheduleOfType(SCHED_HEVSCI_RELOADINCOVER);
 	}
