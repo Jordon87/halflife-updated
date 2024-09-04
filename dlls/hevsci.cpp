@@ -77,10 +77,12 @@ public:
 
 	int FUN_1004c8d9(bool a1);
 	void FUN_1004c919(bool a1);
+	void Reload();
 	void Shotgun();
 	void Gauss();
 	void MP5();
-	void Reload();
+	void RPG();
+	void Python();
 
 	void Touch(CBaseEntity* pOther) override;
 	void DeclineFollowing() override;
@@ -103,12 +105,12 @@ public:
 	bool Restore(CRestore& restore) override;
 	static TYPEDESCRIPTION m_SaveData[];
 
-	bool m_fGunDrawn;
 	float m_painTime;
 	float m_checkAttackTime;
 	bool m_lastAttackCheck;
 	bool m_cClipsize;
-	int m_isDucking;
+	bool m_isDucking;
+	bool m_canDuckAttack;
 
 	int m_nShell;
 	int m_nShotgunShell;
@@ -125,12 +127,13 @@ LINK_ENTITY_TO_CLASS(monster_hevsci, CHEVSci);
 
 TYPEDESCRIPTION CHEVSci::m_SaveData[] =
 	{
-		DEFINE_FIELD(CHEVSci, m_fGunDrawn, FIELD_BOOLEAN),
 		DEFINE_FIELD(CHEVSci, m_painTime, FIELD_TIME),
 		DEFINE_FIELD(CHEVSci, m_checkAttackTime, FIELD_TIME),
 		DEFINE_FIELD(CHEVSci, m_lastAttackCheck, FIELD_BOOLEAN),
 		DEFINE_FIELD(CHEVSci, m_flPlayerDamage, FIELD_FLOAT),
 		DEFINE_FIELD(CHEVSci, m_cClipsize, FIELD_BOOLEAN),
+		DEFINE_FIELD(CHEVSci, m_isDucking, FIELD_BOOLEAN),
+		DEFINE_FIELD(CHEVSci, m_canDuckAttack, FIELD_BOOLEAN),
 };
 
 IMPLEMENT_SAVERESTORE(CHEVSci, CTalkMonster);
@@ -403,6 +406,14 @@ void CHEVSci::FUN_1004c919(bool a1)
 	}
 }
 
+void CHEVSci::Reload()
+{
+	if (m_cClipsize != true)
+	{
+		m_cAmmoLoaded = m_cClipsize;
+	}
+}
+
 void CHEVSci::Shotgun()
 {
 	if (FUN_1004c8d9(true) != 0)
@@ -523,7 +534,7 @@ void CHEVSci::Gauss()
 		else
 			pitchShift -= 5;
 
-		EMIT_SOUND_DYN(ENT(pev), 1, "weapons/gauss2.wav", VOL_NORM, ATTN_NORM, 0, RANDOM_LONG(0, 31) + 85);
+		EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/gauss2.wav", VOL_NORM, ATTN_NORM, 0, RANDOM_LONG(0, 31) + 85);
 		CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, 384, 0.3);
 	}
 }
@@ -558,25 +569,95 @@ void CHEVSci::MP5()
 
 		if (hasShot == 0)
 		{
-			EMIT_SOUND_DYN(ENT(pev), 1, "weapons/hks1.wav", VOL_NORM, ATTN_NORM, 0, pitchShift + 100);
+			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/hks1.wav", VOL_NORM, ATTN_NORM, 0, pitchShift + 100);
 		}
 		else if (hasShot == 1)
 		{
-			EMIT_SOUND_DYN(ENT(pev), 1, "weapons/hks2.wav", VOL_NORM, ATTN_NORM, 0, pitchShift + 100);
+			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/hks2.wav", VOL_NORM, ATTN_NORM, 0, pitchShift + 100);
 		}
 		else
 		{
-			EMIT_SOUND_DYN(ENT(pev), 1, "weapons/hks3.wav", VOL_NORM, ATTN_NORM, 0, pitchShift + 100);
+			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/hks3.wav", VOL_NORM, ATTN_NORM, 0, pitchShift + 100);
 		}
 		CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, 384, 0.3);
 	}
 }
 
-void CHEVSci::Reload()
+void CHEVSci::RPG()
 {
-	if (m_cClipsize != true)
+	if (FUN_1004c8d9(true) != 0)
 	{
-		m_cAmmoLoaded = m_cClipsize;
+		Vector vecOrigin, vecAngles;
+		UTIL_MakeVectors(pev->angles);
+
+		GetAttachment(1, vecOrigin, vecAngles);
+
+		if (m_hEnemy != NULL)
+		{
+			if (pev->velocity.Length() > 64.0f)
+			{
+				m_vecEnemyLKP - vecOrigin;
+				Vector unk = m_hEnemy->pev->velocity*((pev->velocity.Length() / 2000.0) + 0.4);
+				Vector vecShootDir = ShootAtEnemy(vecOrigin);
+
+				vecShootDir + unk / 2.0f;
+			}
+			else
+			{
+				Vector vecShootDir = ShootAtEnemy(vecOrigin);
+			}
+
+			Vector angDir = UTIL_VecToAngles(vecAngles);
+
+			angDir.x = angDir.x * -1.0f;
+
+			SetBlending(0, angDir.x);
+
+			CBaseEntity* pRocket = CBaseEntity::Create("rpg_rocket", vecOrigin, angDir, edict());
+		
+			FUN_1004c919(true);
+
+			EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/rocketfire1.wav", 0.9f, ATTN_NORM);
+			EMIT_SOUND(ENT(pev), CHAN_ITEM, "weapons/glauncher.wav", 0.7f, ATTN_NORM);
+
+			CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, 384, 0.3);
+		}
+	}
+}
+
+void CHEVSci::Python()
+{
+	if (FUN_1004c8d9(true) != 0)
+	{
+		Vector vecOrigin, vecAngles;
+		UTIL_MakeVectors(pev->angles);
+
+		GetAttachment(2, vecOrigin, vecAngles);
+
+		Vector vecShootDir = ShootAtEnemy(vecOrigin);
+
+		Vector angDir = UTIL_VecToAngles(vecShootDir);
+		SetBlending(0, angDir.x);
+
+		pev->effects = EF_MUZZLEFLASH;
+
+		Vector vecShellVelocity = gpGlobals->v_right * RANDOM_FLOAT(150, 240) + gpGlobals->v_up * RANDOM_FLOAT(120, 300) + gpGlobals->v_forward * RANDOM_FLOAT(-40, 40);
+		EjectBrass(vecOrigin - vecAngles * 24, vecShellVelocity, pev->angles.y, m_nShell, TE_BOUNCE_SHELL);
+		FireBullets(1, vecOrigin, vecShootDir, VECTOR_CONE_5DEGREES, 4096, BULLET_PLAYER_357);
+
+		FUN_1004c919(true);
+
+		int hasShot = RANDOM_LONG(0, 1);
+
+		if (hasShot == 0)
+		{
+			EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/357_shot1.wav", VOL_NORM, ATTN_NORM);
+		}
+		else
+		{
+			EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/357_shot2.wav", VOL_NORM, ATTN_NORM);
+		}
+		CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, 384, 0.3);
 	}
 }
 
@@ -602,6 +683,14 @@ void CHEVSci::HandleAnimEvent(MonsterEvent_t* pEvent)
 
 	case 3:
 		MP5();
+		break;
+	
+	case 4:
+		RPG();
+		break;
+	
+	case 5:
+		Python();
 		break;
 
 	case 6:
@@ -711,7 +800,7 @@ void CHEVSci::Spawn()
 	}
 
 	m_afCapability = bits_CAP_HEAR | bits_CAP_TURN_HEAD | bits_CAP_DOORS_GROUP;
-	m_isDucking = 0;
+	m_isDucking = false;
 
 
 	MonsterInit();
@@ -1057,10 +1146,6 @@ Schedule_t* CHEVSci::GetSchedule()
 		// always act surprized with a new enemy
 		if (HasConditions(bits_COND_NEW_ENEMY) && HasConditions(bits_COND_LIGHT_DAMAGE))
 			return GetScheduleOfType(SCHED_SMALL_FLINCH);
-
-		// wait for one schedule to draw gun
-		if (!m_fGunDrawn)
-			return GetScheduleOfType(SCHED_ARM_WEAPON);
 
 		if (HasConditions(bits_COND_HEAVY_DAMAGE))
 			return GetScheduleOfType(SCHED_TAKE_COVER_FROM_ENEMY);
