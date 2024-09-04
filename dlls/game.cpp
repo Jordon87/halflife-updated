@@ -231,6 +231,11 @@ cvar_t sk_scientist_health1 = {"sk_scientist_health1", "0"};
 cvar_t sk_scientist_health2 = {"sk_scientist_health2", "0"};
 cvar_t sk_scientist_health3 = {"sk_scientist_health3", "0"};
 
+// HEV Scientist
+cvar_t sk_HEVscientist_health1 = {"sk_HEVscientist_health1", "0"};
+cvar_t sk_HEVscientist_health2 = {"sk_HEVscientist_health2", "0"};
+cvar_t sk_HEVscientist_health3 = {"sk_HEVscientist_health3", "0"};
+
 
 // Snark
 cvar_t sk_snark_health1 = {"sk_snark_health1", "0"};
@@ -708,6 +713,10 @@ void GameDLLInit()
 	CVAR_REGISTER(&sk_scientist_health2); // {"sk_scientist_health2","0"};
 	CVAR_REGISTER(&sk_scientist_health3); // {"sk_scientist_health3","0"};
 
+	// HEV Scientist
+	CVAR_REGISTER(&sk_HEVscientist_health1);
+	CVAR_REGISTER(&sk_HEVscientist_health2);
+	CVAR_REGISTER(&sk_HEVscientist_health3);
 
 	// Snark
 	CVAR_REGISTER(&sk_snark_health1); // {"sk_snark_health1","0"};
@@ -934,6 +943,7 @@ void GameDLLInit()
 	InitMapLoadingUtils();
 
 	SERVER_COMMAND("exec skill.cfg\n");
+	SERVER_COMMAND("exec shlskill.cfg\n");
 }
 
 void GameDLLShutdown()

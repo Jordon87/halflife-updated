@@ -273,6 +273,9 @@ void CGameRules::RefreshSkillData()
 	// Scientist
 	gSkillData.scientistHealth = GetSkillCvar("sk_scientist_health");
 
+	// HEV Scientist
+	gSkillData.HEVscientistHealth = GetSkillCvar("sk_HEVscientist_health");
+
 	// Snark
 	gSkillData.snarkHealth = GetSkillCvar("sk_snark_health");
 	gSkillData.snarkDmgBite = GetSkillCvar("sk_snark_dmg_bite");

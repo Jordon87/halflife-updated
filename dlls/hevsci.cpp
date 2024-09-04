@@ -27,6 +27,8 @@
 #include "scripted.h"
 #include "weapons.h"
 #include "soundent.h"
+#include "items.h"
+#include "gamerules.h"
 
 //=========================================================
 // Monster's Anim Events Go Here
@@ -50,6 +52,11 @@ enum
 	HEAD_GLASSES = 3,
 	HEAD_SLICK = 4,
 	HEAD_WOMAN = 5
+};
+
+enum
+{
+	TASK_HEVSCI_HEAL_THINGY = LAST_TALKMONSTER_TASK + 1,
 };
 
 enum
@@ -111,6 +118,8 @@ public:
 	bool m_cClipsize;
 	bool m_isDucking;
 	bool m_canDuckAttack;
+
+	CItem* m_pUnkItem;
 
 	int m_nShell;
 	int m_nShotgunShell;
@@ -265,20 +274,52 @@ IMPLEMENT_CUSTOM_SCHEDULES(CHEVSci, CTalkMonster);
 
 void CHEVSci::StartTask(Task_t* pTask)
 {
-	CTalkMonster::StartTask(pTask);
+	switch (pTask->iTask)
+	{
+	case TASK_HEVSCI_HEAL_THINGY:
+		if (MoveToLocation(ACT_RUN, 0.0f, m_pUnkItem->pev->origin) == false)
+		{
+			TaskFail();
+			RouteClear();
+		}
+		break;
+
+	default:
+		CTalkMonster::StartTask(pTask);
+		break;
+	}
 }
 
 void CHEVSci::RunTask(Task_t* pTask)
 {
 	switch (pTask->iTask)
 	{
-	case TASK_RANGE_ATTACK1:
-		if (m_hEnemy != NULL && (m_hEnemy->IsPlayer()))
+	case TASK_HEVSCI_HEAL_THINGY:
+	{
+		float distance = (m_vecMoveGoal - pev->origin).Length2D();
+
+		if (distance < 16.0f)
 		{
-			pev->framerate = 1.5;
+			EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/smallmedkit1.wav", VOL_NORM, ATTN_NORM);
+			pev->health = gSkillData.HEVscientistHealth;
+
+			if (g_pGameRules->ItemShouldRespawn(m_pUnkItem) == NULL)
+			{
+				UTIL_Remove(m_pUnkItem);
+			}
+			else
+			{
+				m_pUnkItem->Respawn();
+			}
+
+			m_pUnkItem = NULL;
+			RouteClear();
+			TaskComplete();
 		}
-		CTalkMonster::RunTask(pTask);
+		FRefreshRoute();
 		break;
+	}
+
 	default:
 		CTalkMonster::RunTask(pTask);
 		break;
@@ -1205,14 +1246,12 @@ void CHEVSci::Touch(CBaseEntity* pOther)
 {
 	if ((pev->spawnflags & SF_HEVSCI_INDEPENDENT) == 0)
 	{
-		Touch(pOther);
+		CTalkMonster::Touch(pOther);
 	}
 	else
 	{
 		if (!FOkToSpeak())
-		{
 			DeclineFollowing();
-		}
 	}
 }
 
