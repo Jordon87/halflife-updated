@@ -29,6 +29,7 @@
 #include "soundent.h"
 #include "items.h"
 #include "gamerules.h"
+#include "animation.h"
 
 #define SF_HEVSCI_INDEPENDENT 8
 
@@ -95,6 +96,8 @@ public:
 
 	void TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType) override;
 	void Killed(entvars_t* pevAttacker, int iGib) override;
+	void SetActivity(Activity NewActivity) override;
+	void MonsterThink() override;
 
 	bool Save(CSave& save) override;
 	bool Restore(CRestore& restore) override;
@@ -401,9 +404,21 @@ bool CHEVSci::CheckRangeAttack1(float flDot, float flDist)
 			UTIL_TraceLine(shootOrigin, shootTarget, dont_ignore_monsters, ENT(pev), &tr);
 			m_checkAttackTime = gpGlobals->time + 1;
 			if (tr.flFraction == 1.0 || (tr.pHit != NULL && CBaseEntity::Instance(tr.pHit) == pEnemy))
+			{
 				m_lastAttackCheck = true;
+				Vector shootOrigin2 = pev->origin + Vector(0, 0, 35);
+				Vector shootTarget2 = ((pEnemy->BodyTarget(shootOrigin) - pEnemy->pev->origin) + m_vecEnemyLKP);
+				UTIL_TraceLine(shootOrigin2, shootTarget2, dont_ignore_monsters, ENT(pev), &tr);
+				m_checkAttackTime = gpGlobals->time + 1;
+
+				if (tr.flFraction == 1.0 || (tr.pHit != NULL && CBaseEntity::Instance(tr.pHit) == pEnemy))
+					m_canDuckAttack = true;
+			}
 			else
+			{
 				m_lastAttackCheck = false;
+				m_canDuckAttack = false;
+			}
 			m_checkAttackTime = gpGlobals->time + 1.5;
 		}
 		return m_lastAttackCheck;
@@ -1065,6 +1080,238 @@ void CHEVSci::Killed(entvars_t* pevAttacker, int iGib)
 {
 	SetUse(NULL);
 	CTalkMonster::Killed(pevAttacker, iGib);
+}
+
+void CHEVSci::SetActivity(Activity NewActivity)
+{
+	int iSequence = ACTIVITY_NOT_AVAILABLE;
+
+	TraceResult tr;
+
+	if (m_isDucking)
+	{
+		UTIL_TraceHull(pev->origin + Vector(-16.0, -16.0, 37.0), pev->origin + Vector(16.0, 16.0, 71.0), dont_ignore_monsters, head_hull, edict(), &tr);
+
+		CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
+		if (tr.pHit != NULL || tr.pHit == edict() || FClassnameIs(pEntity->pev, "worldspawn"))
+		{
+			m_isDucking = false;
+		}
+		else
+		{
+			if (pEntity)
+			{
+				ALERT(at_aiconsole, " HEVSci hit %s\n", &gpGlobals->pStringBase[pEntity->pev->classname]);
+			}
+		}
+	}
+
+	switch (NewActivity)
+	{
+	default:
+		iSequence = LookupActivity(NewActivity);
+		break;
+	
+	case ACT_IDLE:
+	case ACT_SIGNAL3:
+		SetBlending(0, RANDOM_LONG(-20, 0));
+	
+		if (m_isDucking)
+		{
+			if ((pev->weapons & 1) != 0)
+			{
+				iSequence = LookupSequence("look_idle");
+			}
+			if ((pev->weapons & 2) != 0)
+			{
+				iSequence = LookupSequence("ref_aim_shotgun");
+			}
+			if ((pev->weapons & 4) != 0)
+			{
+				iSequence = LookupSequence("ref_aim_gauss");
+			}
+			if ((pev->weapons & 8) != 0)
+			{
+				iSequence = LookupSequence("ref_aim_mp5");
+			}
+			if ((pev->weapons & 16) != 0)
+			{
+				iSequence = LookupSequence("ref_aim_rpg");
+			}
+			if ((pev->weapons & 32) != 0)
+			{
+				iSequence = LookupSequence("ref_aim_python");
+			}
+	
+			int idleRNG = RANDOM_LONG(0, 3);
+	
+			if (idleRNG == 0)
+			{
+				iSequence = LookupSequence("look_idle");
+			}
+			else if (idleRNG == 1)
+			{
+				iSequence = LookupSequence("deep_idle");
+			}
+		}
+		else
+		{
+			iSequence = LookupSequence("crouch_aim_gauss");
+		}
+		break;
+	
+	case ACT_WALK:
+	case ACT_RUN:
+		if (m_isDucking)
+		{
+			iSequence = LookupActivity(NewActivity);
+		}
+		else
+		{
+			iSequence = LookupSequence("crouch_aim_gauss");
+		}
+		break;
+	
+	case ACT_RANGE_ATTACK1:
+		if ((pev->weapons & 2) != 0)
+		{
+			if (m_canDuckAttack)
+			{
+				iSequence = LookupSequence("ref_shoot_shotgun");
+			}
+			else
+			{
+				iSequence = LookupSequence("crouch_shoot_shotgun");
+				m_isDucking = true;
+			}
+		}
+	
+		if ((pev->weapons & 4) != 0)
+		{
+			if (m_canDuckAttack)
+			{
+				iSequence = LookupSequence("ref_shoot_gauss");
+			}
+			else
+			{
+				iSequence = LookupSequence("crouch_shoot_gauss");
+				m_isDucking = true;
+			}
+		}
+	
+		if ((pev->weapons & 8) != 0)
+		{
+			if (m_canDuckAttack)
+			{
+				iSequence = LookupSequence("ref_shoot_MP5");
+			}
+			else
+			{
+				iSequence = LookupSequence("crouch_shoot_MP5");
+				m_isDucking = true;
+			}
+		}
+	
+		if ((pev->weapons & 16) != 0)
+		{
+			if (m_canDuckAttack)
+			{
+				iSequence = LookupSequence("ref_shoot_RPG");
+			}
+			else
+			{
+				iSequence = LookupSequence("crouch_shoot_RPG");
+				m_isDucking = true;
+			}
+		}
+	
+		if ((pev->weapons & 32) != 0)
+		{
+			pev->framerate = RANDOM_FLOAT(0.8, 1.5);
+	
+			if (m_canDuckAttack)
+			{
+				iSequence = LookupSequence("ref_shoot_python");
+			}
+			else
+			{
+				iSequence = LookupSequence("crouch_shoot_python");
+				m_isDucking = true;
+			}
+		}
+		break;
+	
+	case ACT_RELOAD:
+		m_isDucking = true;
+		iSequence = LookupActivity(NewActivity);
+		break;
+	}
+
+	if (m_isDucking)
+	{
+		UTIL_SetSize(pev, Vector(-16.0, -16.0, 0.0), Vector(16.0, 16.0, 72.0));
+	}
+	else
+	{
+		UTIL_SetSize(pev, Vector(-16.0, -16.0, 0.0), Vector(16.0, 16.0, 36.0));
+	}
+
+	if (NewActivity == ACT_RANGE_ATTACK1 || NewActivity == ACT_RELOAD || NewActivity == ACT_DIESIMPLE || NewActivity == ACT_DIEBACKWARD || NewActivity == ACT_DIEFORWARD || NewActivity == ACT_DIEVIOLENT || !m_isDucking)
+	{
+		m_Activity = NewActivity;
+	}
+
+	if (iSequence <= -1)
+	{
+		ALERT(at_console, "%s has no sequence for act:%d\n", gpGlobals->pStringBase[this->pev->classname], iSequence);
+		pev->sequence = 0;
+	}
+	else
+	{
+		if (pev->sequence != iSequence || !m_fSequenceLoops)
+			pev->frame = 0.0f;
+
+		pev->sequence = iSequence;
+		ResetSequenceInfo();
+		SetYawSpeed();
+	}
+}
+
+void CHEVSci::MonsterThink()
+{
+	pev->nextthink = gpGlobals->time + 0.1;
+
+	RunAI();
+
+	float flInterval = StudioFrameAdvance();	
+	if (m_MonsterState != MONSTERSTATE_SCRIPT && m_MonsterState != MONSTERSTATE_DEAD && m_Activity == ACT_IDLE && m_fSequenceFinished)
+	{
+		int iSequence = ACTIVITY_NOT_AVAILABLE;
+
+		if (m_fSequenceLoops)
+		{
+			if (m_Activity == ACT_IDLE)
+				SetActivity(ACT_IDLE);
+			else
+				iSequence = LookupActivity(m_Activity);
+		}
+		else
+		{
+			iSequence = LookupActivityHeaviest(m_Activity);
+		}
+		if (iSequence != ACTIVITY_NOT_AVAILABLE)
+		{
+			pev->sequence = iSequence; // Set to new anim (if it's there)
+			ResetSequenceInfo();
+		}
+	}
+
+	DispatchAnimEvents(flInterval);
+
+	if (!MovementIsComplete())
+	{
+		Move(flInterval);
+	}
 }
 
 //=========================================================
