@@ -496,7 +496,9 @@ void CHEVSci::Gauss()
 
 		Vector originDir = ShootAtEnemy(vecOrigin);
 
-		originDir + Vector(RANDOM_FLOAT(-0.05, 0.05), RANDOM_FLOAT(-0.05, 0.05), RANDOM_FLOAT(-0.05, 0.05));
+		Vector gaussVelocity = Vector(RANDOM_FLOAT(-0.05, 0.05), RANDOM_FLOAT(-0.05, 0.05), RANDOM_FLOAT(-0.05, 0.05));
+
+		originDir + gaussVelocity;
 
 		Vector vecDest = vecOrigin + vecAngles * 8192;
 
@@ -515,7 +517,7 @@ void CHEVSci::Gauss()
 	
 		CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
 
-		if (pEntity || pev->takedamage == 0.0f)
+		if (!pEntity || pev->takedamage == 0.0f)
 		{
 			MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos);
 			WRITE_COORD(tr.vecEndPos.x);
