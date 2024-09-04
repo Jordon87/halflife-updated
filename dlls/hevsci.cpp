@@ -446,17 +446,14 @@ int CHEVSci::FUN_1004c8d9(byte a1)
 void CHEVSci::FUN_1004c919(byte a1)
 {
 	if (m_cClipsize != -1)
-	{
-		m_cAmmoLoaded = m_cAmmoLoaded - a1;
-	}
+		m_cAmmoLoaded -= a1;
 }
 
 void CHEVSci::Reload()
 {
-	if (m_cClipsize != 1)
-	{
+	if (m_cClipsize != -1)
 		m_cAmmoLoaded = m_cClipsize;
-	}
+
 }
 
 void CHEVSci::Shotgun()
