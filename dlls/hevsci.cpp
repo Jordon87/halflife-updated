@@ -498,7 +498,7 @@ void CHEVSci::Gauss()
 
 		Vector gaussVelocity = Vector(RANDOM_FLOAT(-0.05, 0.05), RANDOM_FLOAT(-0.05, 0.05), RANDOM_FLOAT(-0.05, 0.05));
 
-		originDir + gaussVelocity;
+		vecAngles = originDir + gaussVelocity;
 
 		Vector vecDest = vecOrigin + vecAngles * 8192;
 
@@ -511,9 +511,7 @@ void CHEVSci::Gauss()
 
 		pev->effects = EF_MUZZLEFLASH;
 
-		edict_t* pentIgnore = edict();
-
-		UTIL_TraceLine(vecOrigin, vecDest, dont_ignore_monsters, pentIgnore, &tr);
+		UTIL_TraceLine(vecOrigin, vecDest, dont_ignore_monsters, ENT(pev), &tr);
 	
 		CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
 
