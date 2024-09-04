@@ -64,6 +64,7 @@ public:
 	void AlertSound() override;
 	int Classify() override;
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
+	void PrescheduleThink() override;
 
 	void RunTask(Task_t* pTask) override;
 	void StartTask(Task_t* pTask) override;
@@ -773,6 +774,21 @@ void CHEVSci::HandleAnimEvent(MonsterEvent_t* pEvent)
 	}
 }
 
+void CHEVSci::PrescheduleThink()
+{
+	if (pev->skin != 0)
+	{
+		pev->skin = 0;
+	}
+
+	if (RANDOM_LONG(0, 36) == 0)
+	{
+		pev->skin = 1;
+	}
+
+	CTalkMonster::PrescheduleThink();
+}
+
 //=========================================================
 // Spawn
 //=========================================================
@@ -1422,25 +1438,22 @@ Schedule_t* CHEVSci::GetSchedule()
 	{
 	case MONSTERSTATE_COMBAT:
 	{
+		ClearConditions(bits_COND_LIGHT_DAMAGE);
+
 		// dead enemy
-		if (HasConditions(bits_COND_ENEMY_DEAD))
+		if (!HasConditions(bits_COND_ENEMY_DEAD))
 		{
-			// call base class, all code to handle dead enemies is centralized there.
-			return CBaseMonster::GetSchedule();
+			if (HasConditions(bits_COND_HEAVY_DAMAGE))
+				return GetScheduleOfType(SCHED_TAKE_COVER_FROM_ENEMY);
+			if (HasConditions(bits_COND_ENEMY_OCCLUDED))
+				return GetScheduleOfType(SCHED_CHASE_ENEMY);
 		}
-
-		// always act surprized with a new enemy
-		if (HasConditions(bits_COND_NEW_ENEMY) && HasConditions(bits_COND_LIGHT_DAMAGE))
-			return GetScheduleOfType(SCHED_SMALL_FLINCH);
-
-		if (HasConditions(bits_COND_HEAVY_DAMAGE))
-			return GetScheduleOfType(SCHED_TAKE_COVER_FROM_ENEMY);
 	}
 	break;
 
 	case MONSTERSTATE_ALERT:
 	case MONSTERSTATE_IDLE:
-		if (HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE))
+		if (HasConditions(bits_COND_HEAVY_DAMAGE))
 		{
 			// flinch if hurt
 			return GetScheduleOfType(SCHED_SMALL_FLINCH);
