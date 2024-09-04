@@ -721,6 +721,7 @@ void CScientist::TalkInit()
 	m_szFriends[0] = "monster_scientist";
 	m_szFriends[1] = "monster_sitting_scientist";
 	m_szFriends[2] = "monster_barney";
+	m_szFriends[3] = "monster_hevsci";
 
 	// scientists speach group names (group names are in sentences.txt)
 
