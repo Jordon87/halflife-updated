@@ -30,18 +30,6 @@
 #include "items.h"
 #include "gamerules.h"
 
-//=========================================================
-// Monster's Anim Events Go Here
-//=========================================================
-// first flag is barney dying for scripted sequences?
-#define BARNEY_AE_DRAW (2)
-#define BARNEY_AE_SHOOT (3)
-#define BARNEY_AE_HOLSTER (4)
-
-#define BARNEY_BODY_GUNHOLSTERED 0
-#define BARNEY_BODY_GUNDRAWN 1
-#define BARNEY_BODY_GUNGONE 2
-
 #define SF_HEVSCI_INDEPENDENT 8
 
 enum
