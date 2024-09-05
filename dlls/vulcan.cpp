@@ -84,9 +84,10 @@ void CVulcan::PrimaryAttack()
 
 	if (FUN_100d7ad4())
 	{
-		if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
+		if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] == 0)
 		{
 			m_flNextPrimaryAttack = gpGlobals->time + 0.15f;
+			return;
 		}
 
 		m_pPlayer->m_iWeaponVolume = 600;
