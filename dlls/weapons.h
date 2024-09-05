@@ -1225,3 +1225,30 @@ public:
 private:
 	unsigned short m_usSnarkFire;
 };
+
+class CVulcan : public CBasePlayerWeapon
+{
+public:
+#ifndef CLIENT_DLL
+	bool Save(CSave& save) override;
+	bool Restore(CRestore& restore) override;
+	static TYPEDESCRIPTION m_SaveData[];
+#endif
+
+	void Spawn() override;
+	void Precache() override;
+	bool GetItemInfo(ItemInfo* p) override;
+	bool Deploy() override;
+	bool CanHolster() override;
+	void Holster() override;
+	void PrimaryAttack() override;
+	void SecondaryAttack() override;
+	void WeaponIdle() override;
+	void FUN_100d7849();
+	bool FUN_100d7ad4();
+
+	int m_nShell;
+	float flSpin;
+	float m_flSpinTime;
+	float m_flSoundTime;
+};

@@ -290,6 +290,9 @@ void W_Precache()
 	UTIL_PrecacheOther("ammo_9mmAR");
 	UTIL_PrecacheOther("ammo_ARgrenades");
 
+	// vulcan
+	UTIL_PrecacheOtherWeapon("weapon_vulcan");
+	
 	// python
 	UTIL_PrecacheOtherWeapon("weapon_357");
 	UTIL_PrecacheOther("ammo_357");
@@ -1459,3 +1462,11 @@ TYPEDESCRIPTION CSatchel::m_SaveData[] =
 		DEFINE_FIELD(CSatchel, m_chargeReady, FIELD_INTEGER),
 };
 IMPLEMENT_SAVERESTORE(CSatchel, CBasePlayerWeapon);
+
+TYPEDESCRIPTION CVulcan::m_SaveData[] =
+	{
+		DEFINE_FIELD(CVulcan, flSpin, FIELD_FLOAT),
+		DEFINE_FIELD(CVulcan, m_flSpinTime, FIELD_TIME),
+		DEFINE_FIELD(CVulcan, m_flSoundTime, FIELD_TIME),
+};
+IMPLEMENT_SAVERESTORE(CVulcan, CBasePlayerWeapon);
