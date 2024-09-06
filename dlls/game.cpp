@@ -373,6 +373,11 @@ cvar_t sk_plr_tripmine1 = {"sk_plr_tripmine1", "0"};
 cvar_t sk_plr_tripmine2 = {"sk_plr_tripmine2", "0"};
 cvar_t sk_plr_tripmine3 = {"sk_plr_tripmine3", "0"};
 
+// Plasma
+cvar_t sk_plr_plasma1 = {"sk_plr_plasma1", "0"};
+cvar_t sk_plr_plasma2 = {"sk_plr_plasma2", "0"};
+cvar_t sk_plr_plasma3 = {"sk_plr_plasma3", "0"};
+
 // HORNET
 cvar_t sk_plr_hornet_dmg1 = {"sk_plr_hornet_dmg1", "0"};
 cvar_t sk_plr_hornet_dmg2 = {"sk_plr_hornet_dmg2", "0"};
@@ -862,6 +867,11 @@ void GameDLLInit()
 	CVAR_REGISTER(&sk_plr_tripmine1); // {"sk_plr_tripmine1","0"};
 	CVAR_REGISTER(&sk_plr_tripmine2); // {"sk_plr_tripmine2","0"};
 	CVAR_REGISTER(&sk_plr_tripmine3); // {"sk_plr_tripmine3","0"};
+
+	// Plasma
+	CVAR_REGISTER(&sk_plr_plasma1);
+	CVAR_REGISTER(&sk_plr_plasma2);
+	CVAR_REGISTER(&sk_plr_plasma3);
 
 	// HORNET
 	CVAR_REGISTER(&sk_plr_hornet_dmg1); // {"sk_plr_hornet_dmg1","0"};

@@ -50,6 +50,9 @@ typedef struct
 	void* pSaveData;
 	Vector vecLandmarkOffset;
 	bool allied;
+
+	int m_SmallPlasmaSprite;
+	int m_PlasmaSprite;
 } globalvars_t;
 
 constexpr int NUM_ENT_CONTROLLERS = 4;

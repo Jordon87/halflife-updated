@@ -290,6 +290,10 @@ void W_Precache()
 	UTIL_PrecacheOther("ammo_9mmAR");
 	UTIL_PrecacheOther("ammo_ARgrenades");
 
+	// plasma
+	UTIL_PrecacheOtherWeapon("weapon_plasma");
+	UTIL_PrecacheOther("ammo_plasma_cell");
+
 	// vulcan
 	UTIL_PrecacheOtherWeapon("weapon_vulcan");
 	

@@ -1247,9 +1247,27 @@ public:
 	void WeaponIdle() override;
 	void FUN_100d7849();
 	bool FUN_100d7ad4();
+	int iItemSlot() override { return 3; }
 
 	int m_nShell;
 	float flSpin;
 	float m_flSpinTime;
 	float m_flSoundTime;
+};
+
+class CPlasma : public CBasePlayerWeapon
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	bool GetItemInfo(ItemInfo* p) override;
+	bool Deploy() override;
+	bool CanHolster() override;
+	void PrimaryAttack() override;
+	void SecondaryAttack() override;
+	void Reload() override;
+	void WeaponIdle() override;
+	int iItemSlot() override { return 4; }
+
+	bool unk;
 };
