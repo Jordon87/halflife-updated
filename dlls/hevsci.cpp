@@ -607,19 +607,17 @@ void CHEVSci::MP5()
 
 		pitchShift -= 5;
 
-		int hasShot = RANDOM_LONG(0, 2);
-
-		if (hasShot == 0)
+		switch (RANDOM_LONG(0, 2))
 		{
+		case 0:
 			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/hks1.wav", VOL_NORM, ATTN_NORM, 0, pitchShift + 100);
-		}
-		else if (hasShot == 1)
-		{
+			break;
+		case 1:
 			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/hks2.wav", VOL_NORM, ATTN_NORM, 0, pitchShift + 100);
-		}
-		else
-		{
+			break;
+		case 2:
 			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/hks3.wav", VOL_NORM, ATTN_NORM, 0, pitchShift + 100);
+			break;
 		}
 		CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, 384, 0.3);
 	}
@@ -689,15 +687,14 @@ void CHEVSci::Python()
 
 		FUN_1004c919(1);
 
-		int hasShot = RANDOM_LONG(0, 1);
-
-		if (hasShot == 0)
+		switch (RANDOM_LONG(0, 1))
 		{
+		case 0:
 			EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/357_shot1.wav", VOL_NORM, ATTN_NORM);
-		}
-		else
-		{
+			break;
+		case 1:
 			EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/357_shot2.wav", VOL_NORM, ATTN_NORM);
+			break;
 		}
 		CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, 384, 0.3);
 	}
