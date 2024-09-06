@@ -1473,6 +1473,12 @@ void CBaseEntity::FireBullets(unsigned int cShots, Vector vecSrc, Vector vecDirS
 					DecalGunshot(&tr, iBulletType);
 					break;
 
+				case BULLET_MONSTER_768MM:
+					pEntity->TraceAttack(pevAttacker, gSkillData.monDmg9MMVulcan, vecDir, &tr, DMG_BULLET);
+					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					DecalGunshot(&tr, iBulletType);
+					break;
+
 				case BULLET_NONE: // FIX
 					pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB);
 					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);

@@ -22,7 +22,7 @@ public:
 	int Classify() override;
 	void SetYawSpeed() override;
 	bool CheckRangeAttack1(float flDot, float flDist) override;
-	bool FUN_10048c1e();
+	int FUN_10048c1e();
 	bool FUN_10048c66();
 	void FUN_10048c9a();
 	void FUN_10048e32(int a1);
@@ -283,19 +283,9 @@ bool CHAssault::CheckRangeAttack1(float flDot, float flDist)
 	return false;
 }
 
-bool CHAssault::FUN_10048c1e()
+int CHAssault::FUN_10048c1e()
 {
-	bool result;
-
-	if ((m_chGunstate == 2) || (m_chGunstate == 1))
-	{
-		result = true;
-	}
-	else
-	{
-		result = false;
-	}
-	return result;
+	return m_chGunstate == 2 || m_chGunstate == 1;
 }
 
 bool CHAssault::FUN_10048c66()
@@ -356,7 +346,7 @@ void CHAssault::FUN_10048e32(int a1)
 		break;
 
 	case 1:
-		if (!FUN_10048c66())
+		if (FUN_10048c66())
 		{
 			m_chGunstate = 1;
 			m_flStatetime = 0.0f;
@@ -420,7 +410,7 @@ void CHAssault::FUN_10048f34()
 		SetBlending(0, angDir.x);
 		pev->effects = EF_MUZZLEFLASH;
 
-		FireBullets(1, vecOrigin, vecShootDir, VECTOR_CONE_1DEGREES, 1024, BULLET_MONSTER_9MM);
+		FireBullets(1, vecOrigin, vecShootDir, VECTOR_CONE_1DEGREES, 1024, BULLET_MONSTER_768MM);
 	
 		switch (RANDOM_LONG(0, 8))
 		{

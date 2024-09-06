@@ -153,6 +153,11 @@ cvar_t sk_hgrunt_gspeed1 = {"sk_hgrunt_gspeed1", "0"};
 cvar_t sk_hgrunt_gspeed2 = {"sk_hgrunt_gspeed2", "0"};
 cvar_t sk_hgrunt_gspeed3 = {"sk_hgrunt_gspeed3", "0"};
 
+// Hassault
+cvar_t sk_hassault_health1 = {"sk_hassault_health1", "0"};
+cvar_t sk_hassault_health2 = {"sk_hassault_health2", "0"};
+cvar_t sk_hassault_health3 = {"sk_hassault_health3", "0"};
+
 // Houndeye
 cvar_t sk_houndeye_health1 = {"sk_houndeye_health1", "0"};
 cvar_t sk_houndeye_health2 = {"sk_houndeye_health2", "0"};
@@ -386,6 +391,10 @@ cvar_t sk_9mmAR_bullet3 = {"sk_9mmAR_bullet3", "0"};
 cvar_t sk_9mm_bullet1 = {"sk_9mm_bullet1", "0"};
 cvar_t sk_9mm_bullet2 = {"sk_9mm_bullet2", "0"};
 cvar_t sk_9mm_bullet3 = {"sk_9mm_bullet3", "0"};
+
+cvar_t sk_9mmVulcan_bullet1 = {"sk_9mmVulcan_bullet1", "0"};
+cvar_t sk_9mmVulcan_bullet2 = {"sk_9mmVulcan_bullet2", "0"};
+cvar_t sk_9mmVulcan_bullet3 = {"sk_9mmVulcan_bullet3", "0"};
 
 
 // HORNET
@@ -633,6 +642,11 @@ void GameDLLInit()
 	CVAR_REGISTER(&sk_hgrunt_gspeed2);
 	CVAR_REGISTER(&sk_hgrunt_gspeed3);
 
+	// Hassault
+	CVAR_REGISTER(&sk_hassault_health1);
+	CVAR_REGISTER(&sk_hassault_health2);
+	CVAR_REGISTER(&sk_hassault_health3);
+
 	// Houndeye
 	CVAR_REGISTER(&sk_houndeye_health1); // {"sk_houndeye_health1","0"};
 	CVAR_REGISTER(&sk_houndeye_health2); // {"sk_houndeye_health2","0"};
@@ -867,6 +881,10 @@ void GameDLLInit()
 	CVAR_REGISTER(&sk_9mm_bullet1); // {"sk_9mm_bullet1","0"};
 	CVAR_REGISTER(&sk_9mm_bullet2); // {"sk_9mm_bullet2","0"};
 	CVAR_REGISTER(&sk_9mm_bullet3); // {"sk_9mm_bullet3","0"};
+
+	CVAR_REGISTER(&sk_9mmVulcan_bullet1);
+	CVAR_REGISTER(&sk_9mmVulcan_bullet2);
+	CVAR_REGISTER(&sk_9mmVulcan_bullet3);
 
 
 	// HORNET

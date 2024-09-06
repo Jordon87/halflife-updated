@@ -241,6 +241,9 @@ void CGameRules::RefreshSkillData()
 	gSkillData.hgruntShotgunPellets = GetSkillCvar("sk_hgrunt_pellets");
 	gSkillData.hgruntGrenadeSpeed = GetSkillCvar("sk_hgrunt_gspeed");
 
+	// Hassault
+	gSkillData.hassaultHealth = GetSkillCvar("sk_hassault_health");
+
 	// Houndeye
 	gSkillData.houndeyeHealth = GetSkillCvar("sk_houndeye_health");
 	gSkillData.houndeyeDmgBlast = GetSkillCvar("sk_houndeye_dmg_blast");
@@ -341,6 +344,7 @@ void CGameRules::RefreshSkillData()
 	// MONSTER WEAPONS
 	gSkillData.monDmg12MM = GetSkillCvar("sk_12mm_bullet");
 	gSkillData.monDmgMP5 = GetSkillCvar("sk_9mmAR_bullet");
+	gSkillData.monDmg9MMVulcan = GetSkillCvar("sk_9mmVulcan_bullet");
 	gSkillData.monDmg9MM = GetSkillCvar("sk_9mm_bullet");
 
 	// MONSTER HORNET
