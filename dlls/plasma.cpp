@@ -6,23 +6,9 @@
 #include "customentity.h"
 #include "soundent.h"
 #include "skill.h"
+#include "plasma.h"
 
 LINK_ENTITY_TO_CLASS(weapon_plasma, CPlasma);
-
-class CPlasmaBall : public CBaseEntity
-{
-public:
-	void Spawn() override;
-	void EXPORT Animate();
-	static void Shoot(entvars_t* pevOwner, Vector vecStart, Vector vecVelocity, float a4, float fldmg);
-	void EXPORT Touch(CBaseEntity* pOther) override;
-
-	bool Save(CSave& save) override;
-	bool Restore(CRestore& restore) override;
-	static TYPEDESCRIPTION m_SaveData[];
-
-	CBeam* m_pTail;
-};
 
 LINK_ENTITY_TO_CLASS(plasmaball, CPlasmaBall);
 
@@ -32,21 +18,6 @@ TYPEDESCRIPTION CPlasmaBall::m_SaveData[] =
 };
 
 IMPLEMENT_SAVERESTORE(CPlasmaBall, CBaseEntity);
-
-class CPlasmaBallBig : public CBaseEntity
-{
-public:
-	void Spawn() override;
-	void EXPORT Animate();
-	static void Shoot(entvars_t* pevOwner, Vector vecStart, Vector vecVelocity, float a4, float fldmg);
-	void EXPORT Touch(CBaseEntity* pOther) override;
-
-	bool Save(CSave& save) override;
-	bool Restore(CRestore& restore) override;
-	static TYPEDESCRIPTION m_SaveData[];
-
-	CBeam* m_pTail[4];
-};
 
 LINK_ENTITY_TO_CLASS(plasmaballbig, CPlasmaBallBig);
 

@@ -91,6 +91,8 @@ struct skilldata_t
 	float zombieDmgOneSlash;
 	float zombieDmgBothSlash;
 
+	float raceHealth;
+
 	float turretHealth;
 	float miniturretHealth;
 	float sentryHealth;
@@ -121,6 +123,8 @@ struct skilldata_t
 	float monDmg9MMVulcan;
 	float monDmg12MM;
 	float monDmgHornet;
+	float monDmgPlasma;
+	float monDmgPlasmaBig;
 
 	// health/suit charge
 	float suitchargerCapacity;

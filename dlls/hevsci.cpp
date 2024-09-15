@@ -641,10 +641,12 @@ void CHEVSci::RPG()
 				Vector vecShootDir = ShootAtEnemy(vecOrigin);
 
 				vecShootDir + unk / 2.0f;
+				vecAngles = vecShootDir;
 			}
 			else
 			{
 				Vector vecShootDir = ShootAtEnemy(vecOrigin);
+				vecAngles = vecShootDir;
 			}
 
 			Vector angDir = UTIL_VecToAngles(vecAngles);
@@ -801,8 +803,12 @@ void CHEVSci::Spawn()
 	m_flFieldOfView = VIEW_FIELD_WIDE; // NOTE: we need a wide field of view so npc will notice player and say hello
 	m_MonsterState = MONSTERSTATE_NONE;
 
-	if (((((pev->weapons != 1) && (pev->weapons != 2)) && (pev->weapons != 4)) &&
-	((pev->weapons != 8 && (pev->weapons != 16)))) && (pev->weapons != 32))
+	if (pev->weapons != 1
+		&& pev->weapons != 2
+		&& pev->weapons != 4
+		&& pev->weapons != 8
+		&& pev->weapons != 16
+		&& pev->weapons != 32)
 	{
 		pev->weapons = 1;
 	}
@@ -858,7 +864,15 @@ void CHEVSci::Spawn()
 
 
 	MonsterInit();
-	SetUse(&CHEVSci::FollowerUse);
+
+	if ((pev->spawnflags & SF_HEVSCI_INDEPENDENT) == 0)
+	{
+		SetUse(&CHEVSci::FollowerUse);
+	}
+	else
+	{
+		SetUse(&CHEVSci::IgnoreUse);
+	}
 }
 
 //=========================================================
