@@ -246,7 +246,7 @@ void CPlasmaBall::Animate()
 	{
 		if (RANDOM_LONG(0, 2) == 0)
 		{
-			MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY);
+			MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, pev->origin);
 			WRITE_BYTE(120);
 			WRITE_COORD(pev->origin.x);
 			WRITE_COORD(pev->origin.y);
@@ -268,7 +268,7 @@ void CPlasmaBall::Animate()
 		{
 			pev->sequence = 1;
 			pev->renderamt = 160.0f;
-			MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY);
+			MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, pev->origin);
 			WRITE_BYTE(120);
 			WRITE_COORD(pev->origin.x);
 			WRITE_COORD(pev->origin.y);
@@ -351,7 +351,7 @@ void CPlasmaBall::Touch(CBaseEntity* pOther)
 		
 			if (tr.fStartSolid == 0)
 			{
-				MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY);
+				MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos);
 				WRITE_BYTE(23);
 				WRITE_COORD(tr.vecEndPos.x);
 				WRITE_COORD(tr.vecEndPos.y);
@@ -376,7 +376,7 @@ void CPlasmaBall::Touch(CBaseEntity* pOther)
 			pev->velocity = pev->velocity.Normalize() * 128.0f;
 			pev->movetype = MOVETYPE_FLY;
 		}
-		MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY);
+		MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, tr.vecEndPos);
 		WRITE_BYTE(120);
 		WRITE_COORD(pev->origin.x);
 		WRITE_COORD(pev->origin.y);
@@ -440,7 +440,7 @@ void CPlasmaBallBig::Animate()
 		unk = pev->velocity + Vector(RANDOM_LONG(0, 512), RANDOM_LONG(-256, 256), RANDOM_LONG(-256, 256));
 	}
 
-	MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY);
+	MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, pev->origin);
 	WRITE_BYTE(120);
 	WRITE_COORD(pev->origin.x);
 	WRITE_COORD(pev->origin.y);
@@ -460,7 +460,7 @@ void CPlasmaBallBig::Animate()
 		pev->sequence = 1;
 		pev->renderamt = 160.0f;
 
-		MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY);
+		MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, pev->origin);
 		WRITE_BYTE(120);
 		WRITE_COORD(pev->origin.x);
 		WRITE_COORD(pev->origin.y);
@@ -545,7 +545,7 @@ void CPlasmaBallBig::Touch(CBaseEntity* pOther)
 		{
 			UTIL_TraceLine(pev->origin, pev->origin + pev->velocity * 10.0f, dont_ignore_monsters, ENT(pev), &tr);
 
-			MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY);
+			MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos);
 			WRITE_BYTE(23);
 			WRITE_COORD(tr.vecEndPos.x);
 			WRITE_COORD(tr.vecEndPos.y);
