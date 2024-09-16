@@ -78,7 +78,7 @@ class CRace : public CSquadMonster
 	bool m_fCanPlasmaAttack;
 	float m_flNextHornetAttackCheck;
 	float m_fCanBigplasmaAttack;
-	bool m_flNextBigplasmaAttackCheck;
+	float m_flNextBigplasmaAttackCheck;
 	int m_iShotCount;
 	float m_flNextPainTime;
 	float m_flNextSpeakTime;
@@ -158,11 +158,11 @@ void CRace::Spawn()
 {
 	Precache();
 
-	SET_MODEL(ENT(pev), "models/HEVsci.mdl");
+	SET_MODEL(ENT(pev), "models/race.mdl");
 	UTIL_SetSize(pev, Vector(-32,-32,0), Vector(32,32,64));
 
 	pev->solid = SOLID_SLIDEBOX;
-	pev->solid = MOVETYPE_STEP;
+	pev->movetype = MOVETYPE_STEP;
 	m_bloodColor = BLOOD_COLOR_ALIEN;
 	pev->effects = 0;
 	pev->health = gSkillData.raceHealth;

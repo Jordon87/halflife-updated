@@ -270,6 +270,11 @@ cvar_t sk_zombie_dmg_both_slash1 = {"sk_zombie_dmg_both_slash1", "0"};
 cvar_t sk_zombie_dmg_both_slash2 = {"sk_zombie_dmg_both_slash2", "0"};
 cvar_t sk_zombie_dmg_both_slash3 = {"sk_zombie_dmg_both_slash3", "0"};
 
+// Race
+cvar_t sk_race_health1 = {"sk_race_health1", "0"};
+cvar_t sk_race_health2 = {"sk_race_health2", "0"};
+cvar_t sk_race_health3 = {"sk_race_health3", "0"};
+
 
 //Turret
 cvar_t sk_turret_health1 = {"sk_turret_health1", "0"};
@@ -765,6 +770,11 @@ void GameDLLInit()
 	CVAR_REGISTER(&sk_zombie_dmg_both_slash2); // {"sk_zombie_dmg_both_slash2","0"};
 	CVAR_REGISTER(&sk_zombie_dmg_both_slash3); // {"sk_zombie_dmg_both_slash3","0"};
 
+
+	//Race
+	CVAR_REGISTER(&sk_race_health1);
+	CVAR_REGISTER(&sk_race_health2);
+	CVAR_REGISTER(&sk_race_health3);
 
 	//Turret
 	CVAR_REGISTER(&sk_turret_health1); // {"sk_turret_health1","0"};
