@@ -294,6 +294,9 @@ Fixes for bugs introduced in beta builds are not included in this list.
 * Added cvar `sv_allowbunnyhopping` to control whether the bunny hopping limiter is enabled (halflife issue [#11](https://github.com/ValveSoftware/halflife/issues/11))
 * Added `sv_load_all_maps` & `sv_stop_loading_all_maps` to help automate node graph generation
 * Added missing client side event for `func_vehicle` sounds
+* Prevented game_zone_player from transitioning across levels to fix Mod_NumForName: not found issue [#241](https://github.com/twhl-community/halflife-updated/pull/241) (Thanks FreeSlave)
+* Fixed null dereference in game_score [#246](https://github.com/twhl-community/halflife-updated/pull/246) (Thanks FreeSlave)
+* Fixed null dereference of m_rawinput and mouse issues on Linux [#251](https://github.com/twhl-community/halflife-updated/pull/251) (Thanks a1batross)
 
 ## Code cleanup
 
